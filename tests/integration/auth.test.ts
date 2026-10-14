@@ -197,11 +197,11 @@ describe("administrator", () => {
 });
 
 describe("authorization", () => {
-  it("unauthenticated requests are refused (401)", async () => {
+  it("unauthenticated requests to protected endpoints are refused (401); leaderboard is public", async () => {
     expect((await call(teamMe)).status).toBe(401);
     expect((await call(adminOverview)).status).toBe(401);
     expect((await call(adminTeams)).status).toBe(401);
-    expect((await call(leaderboard)).status).toBe(401);
+    expect((await call(leaderboard)).status).toBe(200);
   });
 
   it("a team account cannot reach any admin endpoint (403)", async () => {

@@ -48,25 +48,41 @@ export function CompleteClient() {
 
   return (
     <div className="space-y-5 text-center">
-      <div className="relative overflow-hidden rounded-3xl border border-gold/40 bg-card px-6 py-10">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(400px_200px_at_50%_0%,oklch(0.86_0.17_92/0.18),transparent)]" />
-        <Trophy className="mx-auto size-14 text-gold motion-safe:animate-in motion-safe:zoom-in-50 motion-safe:duration-500" aria-hidden />
-        <p className="mt-4 text-xs font-semibold uppercase tracking-[0.35em] text-gold">Vault opened</p>
-        <h1 className="mt-2 font-heading text-3xl font-bold">You escaped, {team.name}!</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Report your finish to the Event Desk.</p>
-        <div className="mt-6 hud-number text-6xl font-bold text-gold">{team.score}</div>
-        <div className="text-xs uppercase tracking-widest text-muted-foreground">final points</div>
+      <div className="relative overflow-hidden rounded-3xl border-2 border-amber-400 bg-gradient-to-b from-slate-900/95 via-slate-900/90 to-slate-950 px-6 py-12 shadow-[0_0_50px_rgba(245,158,11,0.45)] backdrop-blur-2xl">
+        <div className="absolute inset-x-0 top-0 h-2 subway-hazard" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(245,158,11,0.35),transparent_70%)]" />
+        
+        <div className="relative mx-auto mb-3 flex size-24 items-center justify-center rounded-3xl border-2 border-amber-300 bg-gradient-to-tr from-amber-500 via-yellow-400 to-amber-300 text-slate-950 shadow-[0_0_35px_rgba(245,158,11,0.7)] animate-hoverboard">
+          <Trophy className="size-14 stroke-[2.5] drop-shadow-md" aria-hidden />
+        </div>
+
+        <p className="mt-4 font-heading text-xs font-black uppercase tracking-[0.35em] text-yellow-300">
+          ★ NEW HIGH SCORE · RUN COMPLETE! ★
+        </p>
+        <h1 className="mt-2 font-heading text-3xl font-black text-white">Vault Breached, {team.name}!</h1>
+        <p className="mt-1 text-sm font-bold text-slate-300">Report to the Event Desk to register your official victory standing.</p>
+        
+        <div className="mt-6 flex flex-col items-center justify-center">
+          <div className="hud-number font-heading text-6xl font-black text-amber-300 drop-shadow-[0_4px_20px_rgba(245,158,11,0.7)]">
+            {team.score}
+          </div>
+          <div className="text-xs font-black uppercase tracking-widest text-amber-400">TOTAL COINS BAG</div>
+        </div>
       </div>
+
       <div className="grid grid-cols-3 gap-2 text-left">
-        <StatTile label="Rank" value={rank ? `#${rank}` : "—"} tone="signal" hint={frozen ? "final" : "live"} />
-        <StatTile label="Finished" value={formatTime(team.finishedAt)} tone="ok" className="[&_.hud-number]:text-base" />
-        <StatTile label="Route time" value={formatDuration(elapsed)} tone="gold" className="[&_.hud-number]:text-base" />
+        <StatTile label="Rank" value={rank ? `#${rank}` : "—"} tone="signal" hint={frozen ? "final rank" : "live standing"} />
+        <StatTile label="Finish Time" value={formatTime(team.finishedAt)} tone="ok" className="[&_.hud-number]:text-base" />
+        <StatTile label="Run Time" value={formatDuration(elapsed)} tone="gold" className="[&_.hud-number]:text-base" />
       </div>
-      <Button asChild size="lg" className="h-12 w-full">
-        <Link href="/leaderboard">
-          <Trophy className="size-5" /> View leaderboard
-        </Link>
-      </Button>
+
+      <Link
+        href="/leaderboard"
+        className="subway-btn-gold h-14 w-full rounded-2xl flex items-center justify-center gap-2 font-heading text-base font-black tracking-wider uppercase"
+      >
+        <Trophy className="size-5 stroke-[2.5]" />
+        <span>VIEW OFFICIAL LEADERBOARD 🏆</span>
+      </Link>
     </div>
   );
 }

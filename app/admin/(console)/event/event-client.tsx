@@ -36,6 +36,13 @@ const ACTIONS: Record<string, Action> = {
     description: "Lets teams play before the start for rehearsal. Everything is tagged as test data and wiped when test mode is turned off or the event starts.",
   },
   "test-mode-off": { id: "test-mode-off", label: "Disable test mode", icon: FlaskConical, description: "Turns off rehearsal and clears all test data (teams reset to 0)." },
+  "reset-scores": {
+    id: "reset-scores",
+    label: "Reset all team points",
+    icon: RotateCcw,
+    description: "Sets all team scores to 0 on the live leaderboard and adds an audited ledger adjustment.",
+    destructive: true,
+  },
   reset: {
     id: "reset",
     label: "Reset event to setup",
@@ -68,6 +75,7 @@ export function EventClient() {
   if (s.status === "RUNNING") available.push("pause", "end");
   if (s.status === "PAUSED") available.push("resume", "end");
   available.push(s.leaderboardFrozen ? "unfreeze" : "freeze");
+  available.push("reset-scores");
   if (s.status === "SETUP" || s.status === "ENDED") available.push("reset");
 
   const timer = timerDraft ?? s.timer;

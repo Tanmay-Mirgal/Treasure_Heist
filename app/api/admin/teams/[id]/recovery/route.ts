@@ -7,6 +7,7 @@ import {
   clearAwaitingAnswer,
   messageTeam,
   resetTeamProgress,
+  resetTeamScore,
   rollbackProgress,
   verifyNextCheckpoint,
 } from "@/lib/services/admin-teams";
@@ -19,6 +20,7 @@ const Body = z.discriminatedUnion("action", [
     reason: reasonField,
     notify: z.boolean().default(true),
   }),
+  z.object({ action: z.literal("reset-score"), reason: reasonField }),
   z.object({ action: z.literal("reset-scan"), reason: reasonField }),
   z.object({ action: z.literal("rollback"), toPosition: z.number().int().min(0), reversePoints: z.boolean().default(true), reason: reasonField }),
   z.object({ action: z.literal("note"), text: z.string().trim().min(1).max(1000) }),
@@ -37,6 +39,8 @@ export const POST = handle<RouteContext<"/api/admin/teams/[id]/recovery">>(async
       return ok(await verifyNextCheckpoint(actor, id, body.reason));
     case "adjust-score":
       return ok(await adjustScore(actor, id, body.delta, body.reason, body.notify));
+    case "reset-score":
+      return ok(await resetTeamScore(actor, id, body.reason));
     case "reset-scan":
       await clearAwaitingAnswer(actor, id, body.reason);
       return ok({ reset: true });

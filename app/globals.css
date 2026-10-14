@@ -168,26 +168,178 @@
       linear-gradient(var(--c), var(--c)) bottom right / 28px 3px no-repeat,
       linear-gradient(var(--c), var(--c)) bottom right / 3px 28px no-repeat;
   }
+  .glass-panel {
+    background: color-mix(in oklch, var(--card) 85%, transparent);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid oklch(1 0 0 / 12%);
+    box-shadow: 0 8px 30px 0 rgba(0, 0, 0, 0.45);
+  }
+  .glass-card {
+    background: linear-gradient(135deg, color-mix(in oklch, var(--card) 92%, transparent), color-mix(in oklch, var(--card) 65%, transparent));
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid oklch(1 0 0 / 12%);
+  }
+  .glow-gold {
+    box-shadow: 0 0 25px -4px rgba(250, 204, 21, 0.5);
+  }
+  .glow-warn {
+    box-shadow: 0 0 25px -4px rgba(249, 115, 22, 0.5);
+  }
+  .glow-signal {
+    box-shadow: 0 0 25px -4px rgba(6, 182, 212, 0.5);
+  }
+  .glow-ok {
+    box-shadow: 0 0 25px -4px rgba(34, 197, 94, 0.5);
+  }
+  .game-press {
+    transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .game-press:hover {
+    transform: translateY(-2px);
+  }
+  .game-press:active {
+    transform: translateY(1px) scale(0.97);
+  }
+
+  /* Subway Surfers 3D Arcade Buttons */
+  .subway-btn-gold {
+    background: linear-gradient(180deg, #FFE033 0%, #F59E0B 100%);
+    color: #1A0E00;
+    border-bottom: 5px solid #B45309;
+    border-top: 1px solid #FEF08A;
+    border-left: 1px solid #FDE047;
+    border-right: 1px solid #FDE047;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+    box-shadow: 0 6px 16px -2px rgba(245, 158, 11, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    transition: all 0.12s ease-in-out;
+  }
+  .subway-btn-gold:hover {
+    filter: brightness(1.06);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px -2px rgba(245, 158, 11, 0.6);
+  }
+  .subway-btn-gold:active {
+    transform: translateY(3px);
+    border-bottom-width: 2px;
+    box-shadow: 0 2px 8px -1px rgba(245, 158, 11, 0.4);
+  }
+
+  .subway-btn-cyan {
+    background: linear-gradient(180deg, #38BDF8 0%, #0284C7 100%);
+    color: #041B2D;
+    border-bottom: 5px solid #0369A1;
+    border-top: 1px solid #BAE6FD;
+    border-left: 1px solid #7DD3FC;
+    border-right: 1px solid #7DD3FC;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+    box-shadow: 0 6px 16px -2px rgba(14, 165, 233, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    transition: all 0.12s ease-in-out;
+  }
+  .subway-btn-cyan:hover {
+    filter: brightness(1.06);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px -2px rgba(14, 165, 233, 0.6);
+  }
+  .subway-btn-cyan:active {
+    transform: translateY(3px);
+    border-bottom-width: 2px;
+    box-shadow: 0 2px 8px -1px rgba(14, 165, 233, 0.4);
+  }
+
+  .subway-btn-orange {
+    background: linear-gradient(180deg, #FB923C 0%, #EA580C 100%);
+    color: #FFFFFF;
+    border-bottom: 5px solid #9A3412;
+    border-top: 1px solid #FED7AA;
+    border-left: 1px solid #FDBA74;
+    border-right: 1px solid #FDBA74;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 6px 16px -2px rgba(234, 88, 12, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    transition: all 0.12s ease-in-out;
+  }
+  .subway-btn-orange:hover {
+    filter: brightness(1.06);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px -2px rgba(234, 88, 12, 0.6);
+  }
+  .subway-btn-orange:active {
+    transform: translateY(3px);
+    border-bottom-width: 2px;
+    box-shadow: 0 2px 8px -1px rgba(234, 88, 12, 0.4);
+  }
+
+  .subway-btn-dark {
+    background: linear-gradient(180deg, #1E293B 0%, #0F172A 100%);
+    color: #F8FAFC;
+    border-bottom: 5px solid #020617;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 6px 16px -2px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    transition: all 0.12s ease-in-out;
+  }
+  .subway-btn-dark:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+  }
+  .subway-btn-dark:active {
+    transform: translateY(3px);
+    border-bottom-width: 2px;
+  }
+
+  /* Subway Hazard Tape Strip */
+  .subway-hazard {
+    background: repeating-linear-gradient(
+      -45deg,
+      #FACC15,
+      #FACC15 12px,
+      #18181B 12px,
+      #18181B 24px
+    );
+  }
+  .subway-hazard-red {
+    background: repeating-linear-gradient(
+      -45deg,
+      #EF4444,
+      #EF4444 12px,
+      #18181B 12px,
+      #18181B 24px
+    );
+  }
+
+  /* Subway Rail Track pattern */
+  .subway-track-bg {
+    background:
+      repeating-linear-gradient(0deg, transparent, transparent 18px, rgba(255, 255, 255, 0.05) 18px, rgba(255, 255, 255, 0.05) 22px),
+      linear-gradient(90deg, transparent calc(50% - 32px), #475569 calc(50% - 30px), transparent calc(50% - 28px)),
+      linear-gradient(90deg, transparent calc(50% + 28px), #475569 calc(50% + 30px), transparent calc(50% + 32px));
+  }
+
+  /* Subway Surfers Street Tag Sticker */
+  .subway-sticker {
+    transform: rotate(-1.5deg) skewX(-2deg);
+    box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.7);
+    border: 2px solid #FFFFFF;
+  }
 }
 
-@keyframes heist-sweep {
-  0% {
-    transform: translateY(0);
-    opacity: 0;
-  }
-  15% {
-    opacity: 1;
-  }
-  85% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(var(--sweep, 220px));
-    opacity: 0;
-  }
+@keyframes coin-spin {
+  0% { transform: rotateY(0deg); }
+  50% { transform: rotateY(180deg); }
+  100% { transform: rotateY(360deg); }
 }
-.scan-sweep {
-  animation: heist-sweep 2.4s ease-in-out infinite;
+@keyframes hoverboard-float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  25% { transform: translateY(-4px) rotate(-1.5deg); }
+  75% { transform: translateY(2px) rotate(1.5deg); }
+}
+.animate-coin-spin {
+  animation: coin-spin 3s ease-in-out infinite;
+}
+.animate-hoverboard {
+  animation: hoverboard-float 2.4s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {

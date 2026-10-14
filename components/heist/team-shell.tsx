@@ -11,10 +11,10 @@ import { CoinScore, SignalDot } from "./bits";
 import { TeamStateProvider, useTeamState } from "./team-state";
 
 const NAV = [
-  { href: "/play", label: "Base", icon: Home },
+  { href: "/play", label: "Lobby", icon: Home },
   { href: "/play/mission", label: "Mission", icon: Map },
-  { href: "/play/scan", label: "Scan", icon: ScanLine, primary: true },
-  { href: "/play/score", label: "Score", icon: Wallet },
+  { href: "/play/scan", label: "Scan QR", icon: ScanLine, primary: true },
+  { href: "/play/score", label: "Loot", icon: Wallet },
   { href: "/leaderboard", label: "Board", icon: Trophy },
 ];
 
@@ -22,26 +22,48 @@ function TopBar() {
   const { state, error, lastOkAt } = useTeamState();
   const online = useOnline();
   const stale = Boolean(error) || !online;
+
   return (
-    <header className="sticky top-0 z-30 border-b bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70">
-      <div className="mx-auto flex h-14 max-w-lg items-center gap-3 px-4">
-        <Link href="/play" aria-label="Team base" className="shrink-0">
-          <HeistMark className="size-8" />
+    <header className="sticky top-0 z-30 border-b-2 border-slate-700 bg-slate-950/90 backdrop-blur-2xl shadow-xl">
+      {/* Top Hazard Accent */}
+      <div className="h-1 w-full subway-hazard opacity-80" />
+
+      <div className="mx-auto flex h-16 max-w-lg items-center justify-between gap-3 px-4">
+        <Link href="/play" aria-label="Team base" className="shrink-0 transition-transform hover:scale-105 active:scale-95">
+          <div className="relative">
+            <HeistMark className="size-9 drop-shadow-[0_2px_10px_rgba(245,158,11,0.5)]" />
+            <span className="absolute -bottom-0.5 -right-0.5 flex size-2.5">
+              <span className={cn("inline-flex size-full rounded-full opacity-75 motion-safe:animate-ping", stale ? "bg-red-400" : "bg-emerald-400")} />
+              <span className={cn("relative inline-flex size-2.5 rounded-full", stale ? "bg-red-500" : "bg-emerald-500")} />
+            </span>
+          </div>
         </Link>
-        <div className="min-w-0 flex-1">
-          <div className="truncate font-heading text-sm font-semibold tracking-wide">{state?.team.name ?? "Loading…"}</div>
-          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground" aria-live="polite">
+
+        <div className="min-w-0 flex-1 px-1">
+          <div className="flex items-center gap-1.5">
+            <span className="truncate font-heading text-sm font-black tracking-wide text-white">
+              {state?.team.name ?? "Connecting…"}
+            </span>
+            {state && (
+              <span className="rounded-md border border-yellow-400/50 bg-yellow-400/20 px-1.5 py-0.5 text-[10px] font-black uppercase text-yellow-300">
+                CREW #{state.team.number}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400" aria-live="polite">
             {stale ? (
-              <>
-                <WifiOff className="size-3 text-danger" aria-hidden /> {online ? "Reconnecting…" : "Offline"}
-              </>
+              <span className="flex items-center gap-1 text-red-400 font-bold">
+                <WifiOff className="size-3" aria-hidden /> {online ? "Reconnecting…" : "Offline"}
+              </span>
             ) : (
-              <>
-                <SignalDot tone="ok" className="size-1.5" /> Live{lastOkAt ? "" : "…"}
-              </>
+              <span className="flex items-center gap-1 text-emerald-400 font-bold">
+                <span className="size-1.5 rounded-full bg-emerald-400 animate-ping" />
+                Live Grid{lastOkAt ? "" : "…"}
+              </span>
             )}
           </div>
         </div>
+
         {state && <CoinScore score={state.team.score} />}
       </div>
       <EventBanner />
@@ -54,21 +76,18 @@ function EventBanner() {
   if (!state) return null;
   const e = state.event;
   let msg: string | null = null;
-  let tone = "bg-signal/10 text-signal";
+  let tone = "bg-cyan-500/15 text-cyan-300 border-b border-cyan-400/20";
   if (!e.participationEnabled) msg = "Participation is paused by the organizers.";
-  else if (e.status === "SETUP" && e.testMode) {
-    msg = "TEST MODE — rehearsal only, scores will be reset before the real start.";
-    tone = "bg-warn/15 text-warn";
-  } else if (e.status === "SETUP") msg = "Stand by — the heist hasn't started yet.";
+  else if (e.status === "SETUP") msg = "Stand by — the heist hasn't started yet.";
   else if (e.status === "PAUSED") {
     msg = "The heist is paused. Hold your position.";
-    tone = "bg-warn/15 text-warn";
+    tone = "bg-orange-500/20 text-orange-300 border-b border-orange-400/30";
   } else if (e.status === "ENDED" || e.timer.expired) {
     msg = "The heist is over. Check the final leaderboard.";
-    tone = "bg-gold/10 text-gold";
+    tone = "bg-yellow-500/15 text-yellow-300 border-b border-yellow-400/30";
   }
   if (!msg) return null;
-  return <div className={cn("px-4 py-1.5 text-center text-xs font-medium", tone)}>{msg}</div>;
+  return <div className={cn("px-4 py-1.5 text-center text-xs font-black tracking-wide uppercase", tone)}>{msg}</div>;
 }
 
 function BottomNav() {
@@ -76,9 +95,12 @@ function BottomNav() {
   return (
     <nav
       aria-label="Team navigation"
-      className="fixed inset-x-0 bottom-0 z-30 border-t bg-background/90 pb-[env(safe-area-inset-bottom)] backdrop-blur"
+      className="fixed inset-x-0 bottom-0 z-30 border-t-2 border-slate-700 bg-slate-950/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-2xl shadow-[0_-10px_35px_rgba(0,0,0,0.8)]"
     >
-      <ul className="mx-auto grid h-16 max-w-lg grid-cols-5 items-center px-2">
+      {/* Top mini hazard trim on bottom nav */}
+      <div className="h-0.5 w-full subway-hazard opacity-60" />
+
+      <ul className="mx-auto grid h-16 max-w-lg grid-cols-5 items-center px-3">
         {NAV.map((n) => {
           const active = n.href === "/play" ? path === "/play" : path.startsWith(n.href);
           if (n.primary)
@@ -86,26 +108,31 @@ function BottomNav() {
               <li key={n.href} className="flex justify-center">
                 <Link
                   href={n.href}
-                  aria-label="Scan QR"
+                  aria-label="Scan Station QR"
                   aria-current={active ? "page" : undefined}
-                  className="-mt-7 grid size-16 place-items-center rounded-full border-4 border-background bg-primary text-primary-foreground shadow-[0_0_24px_oklch(0.86_0.17_92/0.35)] transition-transform active:scale-95"
+                  className="-mt-7 group relative grid size-16 place-items-center rounded-2xl subway-btn-gold shadow-[0_4px_25px_rgba(245,158,11,0.6)] transition-all duration-150"
                 >
-                  <n.icon className="size-7" />
+                  <n.icon className="size-8 stroke-[2.8] text-slate-950 drop-shadow transition-transform group-hover:scale-110 group-active:scale-95" />
                 </Link>
               </li>
             );
           return (
-            <li key={n.href}>
+            <li key={n.href} className="relative flex justify-center">
               <Link
                 href={n.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex flex-col items-center gap-0.5 rounded-lg py-1.5 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground",
-                  active && "text-signal",
+                  "relative flex flex-col items-center gap-1 rounded-xl px-2 py-1 text-[11px] font-black uppercase tracking-wider transition-all duration-150",
+                  active
+                    ? "text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.6)] scale-105"
+                    : "text-slate-400 hover:text-slate-200 active:scale-95",
                 )}
               >
-                <n.icon className="size-5" />
-                {n.label}
+                <n.icon className={cn("size-5 transition-transform", active && "scale-110 stroke-[2.8]")} />
+                <span>{n.label}</span>
+                {active && (
+                  <span className="absolute -bottom-1 h-1 w-6 rounded-full bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.9)]" />
+                )}
               </Link>
             </li>
           );

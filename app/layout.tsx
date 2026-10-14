@@ -21,9 +21,18 @@ const display = Chakra_Petch({
 });
 
 export const metadata: Metadata = {
-  title: { default: "THE HEIST — Decode. Discover. Escape.", template: "%s · THE HEIST" },
-  description: "A QR-based campus treasure hunt. Decode the clues, discover the checkpoints, escape with the vault.",
-  applicationName: "THE HEIST",
+  title: { default: "SUBWAY HEIST — Campus Runner Edition", template: "%s · SUBWAY HEIST" },
+  description: "A fast-paced Subway Surfers inspired campus QR race. Surf the tracks, dodge the obstacles, bag the coins, and crack the vault.",
+  applicationName: "SUBWAY HEIST",
+  icons: {
+    icon: [
+      { url: "/icon.png", sizes: "512x512", type: "image/png" },
+      { url: "/logo.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-icon.png", sizes: "512x512", type: "image/png" },
+    ],
+  },
 };
 
 export const viewport: Viewport = {

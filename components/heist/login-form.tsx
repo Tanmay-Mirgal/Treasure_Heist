@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { api, ApiClientError, safeNext } from "@/lib/client/api";
+import { cn } from "@/lib/utils";
 
 /** Shared login form for teams and organizers. */
 export function LoginForm({ role }: { role: "team" | "admin" }) {
@@ -103,10 +104,18 @@ export function LoginForm({ role }: { role: "team" | "admin" }) {
           </p>
         )}
       </div>
-      <Button type="submit" disabled={busy} className="h-11 w-full text-base font-semibold">
-        {busy ? <Loader2 className="size-4 animate-spin" /> : <LogIn className="size-4" />}
-        {busy ? "Verifying…" : role === "team" ? "Start mission" : "Log in"}
-      </Button>
+      <button
+        type="submit"
+        disabled={busy}
+        className={cn(
+          "h-13 w-full rounded-2xl font-heading text-base font-black tracking-wider uppercase transition-all flex items-center justify-center gap-2",
+          role === "team" ? "subway-btn-gold" : "subway-btn-cyan",
+          busy && "opacity-75 cursor-wait"
+        )}
+      >
+        {busy ? <Loader2 className="size-5 animate-spin" /> : <LogIn className="size-5 stroke-[2.5]" />}
+        {busy ? "CHECKING CREW TICKET…" : role === "team" ? "START SURFING 🛹" : "ENTER CONTROL ROOM"}
+      </button>
     </form>
   );
 }

@@ -28,92 +28,128 @@ export type ScanResultData = {
 };
 
 const LOOK: Record<ScanOutcome, { icon: typeof Info; tone: string; title: string }> = {
-  ACCEPTED: { icon: CheckCircle2, tone: "text-ok border-ok/40 bg-ok/10", title: "Checkpoint secured" },
-  AWAITING_ANSWER: { icon: Info, tone: "text-signal border-signal/40 bg-signal/10", title: "Challenge unlocked" },
-  DUPLICATE: { icon: Info, tone: "text-signal border-signal/40 bg-signal/10", title: "Already secured" },
-  REJECTED: { icon: OctagonX, tone: "text-danger border-danger/40 bg-danger/10", title: "Scan not recognised" },
-  INACTIVE_QR: { icon: AlertTriangle, tone: "text-warn border-warn/40 bg-warn/10", title: "Checkpoint unavailable" },
-  EVENT_CLOSED: { icon: Clock, tone: "text-warn border-warn/40 bg-warn/10", title: "Scanning closed" },
-  ALREADY_FINISHED: { icon: Flag, tone: "text-gold border-gold/40 bg-gold/10", title: "Vault already opened" },
-  RATE_LIMITED: { icon: Clock, tone: "text-warn border-warn/40 bg-warn/10", title: "Slow down" },
+  ACCEPTED: { icon: CheckCircle2, tone: "text-emerald-300 border-2 border-emerald-400 bg-gradient-to-br from-emerald-500/25 via-slate-900 to-emerald-500/10 shadow-[0_0_35px_rgba(52,211,153,0.35)]", title: "STATION CLEARED! 🛹" },
+  AWAITING_ANSWER: { icon: Info, tone: "text-cyan-300 border-2 border-cyan-400 bg-gradient-to-br from-cyan-500/25 via-slate-900 to-cyan-500/10 shadow-[0_0_35px_rgba(34,211,238,0.35)]", title: "CHALLENGE UNLOCKED" },
+  DUPLICATE: { icon: Info, tone: "text-cyan-300 border-2 border-cyan-400/50 bg-gradient-to-br from-cyan-500/20 via-slate-900 to-transparent shadow-md", title: "ALREADY CLEARED" },
+  REJECTED: { icon: OctagonX, tone: "text-rose-300 border-2 border-rose-500 bg-gradient-to-br from-rose-500/25 via-slate-900 to-rose-500/10 shadow-[0_0_35px_rgba(244,63,94,0.35)]", title: "QR NOT RECOGNISED" },
+  INACTIVE_QR: { icon: AlertTriangle, tone: "text-amber-300 border-2 border-amber-400/60 bg-gradient-to-br from-amber-500/20 via-slate-900 to-transparent shadow-md", title: "STATION OFFLINE" },
+  EVENT_CLOSED: { icon: Clock, tone: "text-amber-300 border-2 border-amber-400/60 bg-gradient-to-br from-amber-500/20 via-slate-900 to-transparent shadow-md", title: "RAILS SUSPENDED" },
+  ALREADY_FINISHED: { icon: Flag, tone: "text-amber-300 border-2 border-amber-400 bg-gradient-to-br from-amber-500/30 via-slate-900 to-amber-500/10 shadow-[0_0_40px_rgba(245,158,11,0.4)]", title: "VAULT ALREADY CRACKED" },
+  RATE_LIMITED: { icon: Clock, tone: "text-amber-300 border-2 border-amber-400/60 bg-gradient-to-br from-amber-500/20 via-slate-900 to-transparent shadow-md", title: "COOLDOWN ACTIVE" },
 };
 
 export function ScanResultView({ result, onScanAgain }: { result: ScanResultData; onScanAgain?: () => void }) {
   const finished = result.outcome === "ACCEPTED" && result.checkpoint?.isFinal;
-  const look = finished ? { icon: Flag, tone: "text-gold border-gold/50 bg-gold/10", title: "VAULT OPENED" } : LOOK[result.outcome];
+  const look = finished ? { icon: Flag, tone: "text-amber-300 border-2 border-amber-400 bg-gradient-to-br from-amber-500/35 via-slate-900 to-amber-500/15 shadow-[0_0_45px_rgba(245,158,11,0.5)]", title: "★ VAULT BREACHED! ★" } : LOOK[result.outcome];
   const cp = result.checkpoint;
   const magnetReady = result.powerUp && (!result.powerUp.status || result.powerUp.status === "AVAILABLE");
 
   return (
     <div className="space-y-4" aria-live="polite">
-      <div className={cn("rounded-2xl border p-5", look.tone)}>
-        <div className="flex items-start gap-3">
-          <look.icon className="mt-0.5 size-7 shrink-0" aria-hidden />
-          <div className="min-w-0">
-            <h2 className="font-heading text-xl font-semibold">{look.title}</h2>
-            <p className="mt-1 text-sm text-foreground/90">{result.message}</p>
-            {result.isTest && <p className="mt-1 text-xs font-semibold text-warn">TEST MODE — not an official score.</p>}
+      <div className={cn("relative overflow-hidden rounded-3xl p-6 backdrop-blur-xl transition-all", look.tone)}>
+        <div className="absolute inset-x-0 top-0 h-1.5 subway-hazard" />
+        
+        <div className="flex items-start gap-4 pt-1">
+          <div className="grid size-14 shrink-0 place-items-center rounded-2xl bg-black/50 border border-white/20 shadow-inner">
+            <look.icon className="size-8 stroke-[2.5]" aria-hidden />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h2 className="font-heading text-2xl font-black tracking-wide text-white">{look.title}</h2>
+            <p className="mt-1 text-sm font-bold leading-relaxed text-slate-200">{result.message}</p>
           </div>
         </div>
+
         {cp && result.outcome === "ACCEPTED" && (
-          <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-current/20 pt-3 text-sm text-foreground">
-            <span className="hud-number rounded-md bg-background/60 px-2 py-0.5 text-gold">+{cp.pointsAwarded}</span>
-            <span>{cp.rewardText}</span>
-            {cp.actionType !== "NORMAL" && <ActionBadge action={cp.actionType} />}
-            {typeof result.score === "number" && <span className="ml-auto text-xs text-muted-foreground">Total: {result.score}</span>}
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t-2 border-white/10 pt-4">
+            <div className="flex items-center gap-2.5">
+              <span className="hud-number rounded-xl border border-yellow-300 bg-yellow-400 px-3 py-1 font-heading text-lg font-black text-slate-950 shadow-[0_2px_12px_rgba(250,204,21,0.6)]">
+                +{cp.pointsAwarded} COINS
+              </span>
+              <span className="text-sm font-black text-white uppercase tracking-wider">{cp.rewardText}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              {cp.actionType !== "NORMAL" && <ActionBadge action={cp.actionType} />}
+              {typeof result.score === "number" && (
+                <span className="rounded-xl border border-white/20 bg-black/50 px-2.5 py-1 font-mono text-xs font-black text-yellow-300">
+                  Total: {result.score} Coins
+                </span>
+              )}
+            </div>
           </div>
         )}
-        {!!result.hintsGranted && <p className="mt-2 text-sm text-ok">+{result.hintsGranted} hint added to your inventory.</p>}
+
+        {!!result.hintsGranted && (
+          <div className="mt-3 flex items-center gap-2 rounded-xl bg-emerald-500/20 p-2.5 text-xs font-black text-emerald-300 border border-emerald-400/40">
+            <span>👟 +{result.hintsGranted} Mystery Clue added to inventory!</span>
+          </div>
+        )}
       </div>
 
       {cp?.clueText && !finished && (
         <MissionCard
-          eyebrow={`Clue from checkpoint ${cp.position} of ${cp.total}`}
-          title={cp.position + 1 === cp.total ? "Final leg — find the vault" : `Next: checkpoint ${cp.position + 1}`}
+          eyebrow={`Unlocked from Station ${cp.position} of ${cp.total}`}
+          title={cp.position + 1 === cp.total ? "Final Leg — Discover The Vault" : `Next Up: Station #${cp.position + 1}`}
           text={cp.clueText}
           action={cp.actionType}
           testMode={result.isTest}
         />
       )}
+
       {finished && cp?.clueText && (
-        <MissionCard eyebrow="Final checkpoint" title="You cracked it" text={cp.clueText} action="FINISH" tone="gold" />
+        <MissionCard eyebrow="Vault Breached" title="Mission Complete" text={cp.clueText} action="FINISH" tone="gold" />
       )}
 
-      <div className="grid gap-2">
+      <div className="grid gap-3">
         {magnetReady && (
-          <Button asChild size="lg" className="h-12 bg-warn text-background hover:bg-warn/90">
-            <Link href={`/play/magnet?id=${result.powerUp!.id}`}>
-              <Magnet className="size-5" /> Use MAGNET now
-            </Link>
-          </Button>
+          <Link
+            href={`/play/magnet?id=${result.powerUp!.id}`}
+            className="subway-btn-orange h-14 rounded-2xl flex items-center justify-center gap-2 font-heading text-base font-black tracking-wider uppercase"
+          >
+            <Magnet className="size-6 mr-1" />
+            <span>FIRE COIN MAGNET POWER-UP NOW ⚡</span>
+          </Link>
         )}
+
         {result.outcome === "AWAITING_ANSWER" && (
-          <Button asChild size="lg" className="h-12">
-            <Link href="/play/mission">Answer the challenge</Link>
-          </Button>
+          <Link
+            href="/play/mission"
+            className="subway-btn-cyan h-14 rounded-2xl flex items-center justify-center gap-2 font-heading text-base font-black tracking-wider uppercase"
+          >
+            <span>CRACK THE STATION PASSKEY →</span>
+          </Link>
         )}
+
         {finished ? (
-          <Button asChild size="lg" className="h-12">
-            <Link href="/play/complete">
-              <Flag className="size-5" /> Finish screen
-            </Link>
-          </Button>
+          <Link
+            href="/play/complete"
+            className="subway-btn-gold h-14 rounded-2xl flex items-center justify-center gap-2 font-heading text-base font-black tracking-wider uppercase"
+          >
+            <Flag className="size-5 mr-1" />
+            <span>VIEW FINISH SCREEN 🏆</span>
+          </Link>
         ) : (
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-3">
             {onScanAgain ? (
-              <Button size="lg" variant="outline" className="h-12" onClick={onScanAgain}>
-                <ScanLine className="size-5" /> Scan again
-              </Button>
+              <button
+                className="subway-btn-cyan h-13 rounded-2xl flex items-center justify-center gap-2 font-heading text-sm font-black uppercase tracking-wider"
+                onClick={onScanAgain}
+              >
+                <ScanLine className="size-5 mr-1" /> Scan Again
+              </button>
             ) : (
-              <Button asChild size="lg" variant="outline" className="h-12">
-                <Link href="/play/scan">
-                  <ScanLine className="size-5" /> Scan
-                </Link>
-              </Button>
+              <Link
+                href="/play/scan"
+                className="subway-btn-cyan h-13 rounded-2xl flex items-center justify-center gap-2 font-heading text-sm font-black uppercase tracking-wider"
+              >
+                <ScanLine className="size-5 mr-1" /> Scan QR
+              </Link>
             )}
-            <Button asChild size="lg" variant="secondary" className="h-12">
-              <Link href="/play/mission">Mission</Link>
-            </Button>
+            <Link
+              href="/play/mission"
+              className="subway-btn-gold h-13 rounded-2xl flex items-center justify-center gap-2 font-heading text-sm font-black uppercase tracking-wider"
+            >
+              <span>View Intel →</span>
+            </Link>
           </div>
         )}
       </div>

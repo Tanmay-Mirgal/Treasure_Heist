@@ -116,19 +116,24 @@ export function MagnetClient() {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-warn/40 bg-warn/10 p-5">
-        <div className="flex items-center gap-2 text-warn">
-          <Magnet className="size-6" aria-hidden />
-          <h1 className="font-heading text-2xl font-semibold">MAGNET</h1>
+      <div className="relative overflow-hidden rounded-3xl border-2 border-orange-400 bg-gradient-to-br from-orange-500/25 via-slate-900 to-amber-500/15 p-6 shadow-2xl backdrop-blur-xl">
+        <div className="absolute inset-x-0 top-0 h-1.5 subway-hazard" />
+        <div className="flex items-center gap-3.5 pt-1 text-orange-400">
+          <div className="grid size-14 place-items-center rounded-2xl bg-orange-500/30 border-2 border-orange-400 text-orange-200 shadow-[0_0_20px_rgba(251,146,60,0.6)]">
+            <Magnet className="size-7 animate-pulse" aria-hidden />
+          </div>
+          <div>
+            <span className="text-[10px] font-black uppercase tracking-widest text-orange-300">★ SUBWAY POWER-UP ★</span>
+            <h1 className="font-heading text-2xl font-black tracking-tight text-white">COIN MAGNET</h1>
+          </div>
         </div>
-        <p className="mt-2 text-sm text-foreground/90">
-          Choose a rival team. They lose up to <strong>{max}</strong> points and your team gains exactly the same amount. A team can&apos;t
-          drop below zero. This MAGNET works once and cannot be undone.
+        <p className="mt-3 text-sm font-bold leading-relaxed text-slate-200">
+          Lock onto rival runner crews and suck up to <strong className="text-yellow-300 font-black">{max} COINS</strong> right onto your score! Rival crews cannot drop below 0 coins.
         </p>
       </div>
 
       {blocked && (
-        <Alert>
+        <Alert className="border-2 border-orange-400/60 bg-orange-500/20 font-black text-orange-200">
           <AlertDescription>{blocked}</AlertDescription>
         </Alert>
       )}
@@ -139,11 +144,11 @@ export function MagnetClient() {
       )}
 
       <fieldset disabled={Boolean(blocked) || busy} className="space-y-2">
-        <legend className="mb-2 text-sm font-medium">Select target team</legend>
+        <legend className="mb-2 text-xs font-black uppercase tracking-wider text-slate-400">Select Target Runner Crew</legend>
         {!targets ? (
-          <Skeleton className="h-40 w-full rounded-xl" />
+          <Skeleton className="h-44 w-full rounded-2xl" />
         ) : (
-          <div role="radiogroup" className="grid gap-2">
+          <div role="radiogroup" className="grid gap-2.5">
             {targets.map((t) => (
               <button
                 key={t.id}
@@ -152,16 +157,25 @@ export function MagnetClient() {
                 aria-checked={targetId === t.id}
                 onClick={() => setTargetId(t.id)}
                 className={cn(
-                  "flex items-center justify-between rounded-xl border bg-card p-3 text-left transition-colors hover:border-warn/50 disabled:opacity-50",
-                  targetId === t.id && "border-warn bg-warn/10",
+                  "group flex items-center justify-between rounded-2xl border-2 p-4 text-left transition-all duration-150 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50",
+                  targetId === t.id
+                    ? "border-orange-400 bg-orange-500/25 shadow-[0_0_25px_rgba(251,146,60,0.4)] ring-2 ring-orange-400/40"
+                    : "border-slate-800 bg-slate-900/90 hover:border-slate-700",
                 )}
               >
-                <span>
-                  <span className="font-medium">{t.name}</span>
-                  <span className="ml-2 text-xs text-muted-foreground">{t.score} pts</span>
-                </span>
-                <span className={cn("text-xs font-semibold", t.transferable > 0 ? "text-warn" : "text-muted-foreground")}>
-                  {t.transferable > 0 ? `pull ${t.transferable}` : "no points"}
+                <div>
+                  <span className="font-heading font-black text-white group-hover:text-orange-200 transition-colors text-base">{t.name}</span>
+                  <span className="ml-2 font-mono text-xs font-black text-yellow-300">{t.score} COINS</span>
+                </div>
+                <span
+                  className={cn(
+                    "rounded-xl px-3 py-1 text-xs font-black uppercase tracking-wider",
+                    t.transferable > 0
+                      ? "bg-orange-500 text-slate-950 shadow-md"
+                      : "bg-slate-800 text-slate-500",
+                  )}
+                >
+                  {t.transferable > 0 ? `SIPHON ${t.transferable} ⚡` : "0 COINS"}
                 </span>
               </button>
             ))}
@@ -169,33 +183,35 @@ export function MagnetClient() {
         )}
       </fieldset>
 
-      <Button
-        size="lg"
-        className="h-12 w-full bg-warn text-background hover:bg-warn/90"
+      <button
         disabled={!selected || Boolean(blocked) || busy}
         onClick={() => selected && setConfirm({ key: newIdempotencyKey(), target: selected })}
+        className={cn(
+          "subway-btn-orange h-14 w-full rounded-2xl font-heading text-base font-black tracking-wider uppercase flex items-center justify-center gap-2",
+          (!selected || Boolean(blocked) || busy) && "opacity-50 cursor-not-allowed",
+        )}
       >
-        <Magnet className="size-5" /> Review MAGNET
-      </Button>
+        <Magnet className="size-6 mr-1" />
+        <span>FIRE COIN MAGNET ON {selected?.name ?? "TARGET"} ⚡</span>
+      </button>
 
       <AlertDialog open={Boolean(confirm)} onOpenChange={(o) => !o && !busy && setConfirm(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="rounded-3xl border-2 border-slate-700 bg-slate-950/95 backdrop-blur-xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>Use MAGNET on {confirm?.target.name}?</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="font-heading text-xl font-black text-white">Engage Magnet on {confirm?.target.name}?</AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-300 font-medium">
               {confirm && confirm.target.transferable > 0
-                ? `${confirm.target.name} loses ${confirm.target.transferable} point${confirm.target.transferable === 1 ? "" : "s"} and your team gains ${confirm.target.transferable}. The final amount is checked by the server at the moment of transfer.`
+                ? `${confirm.target.name} loses ${confirm.target.transferable} coin${confirm.target.transferable === 1 ? "" : "s"} and your crew bags them instantly! This cannot be undone.`
                 : state.rules.magnet.consumeWhenTargetEmpty
-                  ? `${confirm?.target.name} has no points. Your MAGNET will be used up with no transfer.`
-                  : `${confirm?.target.name} has no points to pull. Choose another team.`}{" "}
-              This cannot be undone.
+                  ? `${confirm?.target.name} has no coins. Your MAGNET will be consumed without loot.`
+                  : `${confirm?.target.name} has no coins to pull. Pick another crew!`}{" "}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={busy}>Cancel</AlertDialogCancel>
-            <Button onClick={activate} disabled={busy} className="bg-warn text-background hover:bg-warn/90">
-              {busy && <Loader2 className="size-4 animate-spin" />} Confirm MAGNET
-            </Button>
+            <AlertDialogCancel disabled={busy} className="rounded-xl font-bold">Cancel</AlertDialogCancel>
+            <button onClick={activate} disabled={busy} className="subway-btn-orange rounded-xl px-5 py-2 font-heading font-black uppercase tracking-wider">
+              {busy && <Loader2 className="size-4 animate-spin mr-1 inline" />} UNLEASH MAGNET ⚡
+            </button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

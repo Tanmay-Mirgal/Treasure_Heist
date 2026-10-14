@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { KeyRound, Lightbulb, Loader2, ScanLine } from "lucide-react";
+import { Flag, KeyRound, Lightbulb, Loader2, ScanLine } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -89,67 +89,101 @@ export function MissionClient() {
       />
 
       {mission.kind === "ANSWER" && (
-        <form onSubmit={submitAnswer} className="space-y-2 rounded-2xl border bg-card p-4">
-          <Label htmlFor="answer" className="flex items-center gap-2">
-            <KeyRound className="size-4 text-signal" /> Your answer
+        <form onSubmit={submitAnswer} className="relative overflow-hidden space-y-3 rounded-3xl border-2 border-cyan-400 bg-gradient-to-b from-slate-900/95 via-slate-900/90 to-slate-950 p-5 shadow-2xl backdrop-blur-xl">
+          <div className="absolute inset-x-0 top-0 h-1.5 subway-hazard" />
+          <Label htmlFor="answer" className="pt-1 flex items-center gap-2 font-heading text-sm font-black tracking-wide text-cyan-300">
+            <KeyRound className="size-4 text-cyan-400" /> ENTER STATION PASSKEY
           </Label>
-          <div className="flex gap-2">
-            <Input id="answer" value={answer} onChange={(e) => setAnswer(e.target.value)} maxLength={200} className="h-11 text-base" autoComplete="off" />
-            <Button type="submit" className="h-11" disabled={answerBusy || !answer.trim()}>
-              {answerBusy ? <Loader2 className="size-4 animate-spin" /> : "Submit"}
-            </Button>
+          <div className="flex gap-2.5">
+            <Input
+              id="answer"
+              value={answer}
+              onChange={(e) => setAnswer(e.target.value)}
+              maxLength={200}
+              placeholder="Type your answer here…"
+              className="h-13 border-2 border-slate-700 bg-slate-950/80 font-mono text-base font-bold tracking-wider focus-visible:ring-cyan-400 text-white"
+              autoComplete="off"
+            />
+            <button
+              type="submit"
+              className="subway-btn-cyan h-13 px-6 rounded-2xl font-heading font-black tracking-wider uppercase transition-all"
+              disabled={answerBusy || !answer.trim()}
+            >
+              {answerBusy ? <Loader2 className="size-5 animate-spin" /> : "SUBMIT"}
+            </button>
           </div>
-          {answerMsg && <p className="text-sm text-warn" role="status">{answerMsg}</p>}
-          <p className="text-xs text-muted-foreground">Answers are checked by the server. Repeated wrong answers are rate-limited.</p>
+          {answerMsg && (
+            <p className="rounded-xl border border-orange-400/50 bg-orange-500/20 p-2.5 text-sm font-black text-orange-200" role="status">
+              {answerMsg}
+            </p>
+          )}
+          <p className="text-xs font-semibold text-slate-400">Server authoritative verification. Multiple wrong guesses trigger rate-limiting.</p>
         </form>
       )}
 
       {(mission.kind === "START" || mission.kind === "CLUE") && (
-        <section className="rounded-2xl border bg-card/70 p-4" aria-labelledby="hint-h">
+        <section className="relative overflow-hidden rounded-3xl border-2 border-amber-400/50 bg-gradient-to-b from-slate-900/95 via-slate-900/85 to-slate-950 p-5 shadow-xl backdrop-blur-xl" aria-labelledby="hint-h">
           <div className="flex items-center justify-between gap-3">
-            <h2 id="hint-h" className="flex items-center gap-2 font-medium">
-              <Lightbulb className="size-4 text-gold" /> Hint
+            <h2 id="hint-h" className="flex items-center gap-2 font-heading text-sm font-black uppercase tracking-wider text-amber-300">
+              <span className="text-base">📦</span> Mystery Box Intel & Hints
             </h2>
-            <span className="text-xs text-muted-foreground">{inventory.hintsAvailable} available</span>
+            <span className="rounded-full border border-amber-400/50 bg-amber-400/20 px-2.5 py-0.5 text-xs font-black text-amber-300">
+              {inventory.hintsAvailable} READY
+            </span>
           </div>
+
           {mission.hint.used && mission.hint.text ? (
-            <p className="clue-text mt-2 rounded-lg bg-gold/10 p-3 text-sm text-gold">{mission.hint.text}</p>
+            <div className="mt-3.5 rounded-2xl border-2 border-amber-400/50 bg-amber-500/15 p-4 shadow-[0_0_20px_rgba(245,158,11,0.25)]">
+              <div className="mb-1.5 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-amber-300">
+                <span>★ INTEL DECRYPTED ★</span>
+              </div>
+              <p className="clue-text text-[15px] font-bold leading-relaxed text-amber-100">{mission.hint.text}</p>
+            </div>
           ) : inventory.hintsAvailable > 0 ? (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="outline" className="mt-3 w-full" disabled={hintBusy}>
-                  {hintBusy && <Loader2 className="size-4 animate-spin" />} Use a hint for this clue
-                </Button>
+                <button className="subway-btn-dark mt-3.5 h-12 w-full rounded-2xl font-heading text-sm font-black text-amber-300 border border-amber-400/40 uppercase tracking-wider flex items-center justify-center gap-2" disabled={hintBusy}>
+                  {hintBusy && <Loader2 className="size-4 animate-spin mr-1" />}
+                  <span>📦 OPEN MYSTERY BOX (USE 1 HINT)</span>
+                </button>
               </AlertDialogTrigger>
-              <AlertDialogContent>
+              <AlertDialogContent className="rounded-3xl border-2 border-slate-700 bg-slate-950/95 backdrop-blur-xl">
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Spend a hint?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    You have {inventory.hintsAvailable}. Using one reveals extra help for this clue only. If no hint exists for this clue, nothing is spent.
+                  <AlertDialogTitle className="font-heading text-xl font-black text-white">Deploy 1 Mystery Hint?</AlertDialogTitle>
+                  <AlertDialogDescription className="text-slate-300 font-medium">
+                    You have <span className="font-black text-amber-400">{inventory.hintsAvailable}</span> mystery hints in inventory. Unlocking one reveals strategic coordinates for this station clue.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Keep it</AlertDialogCancel>
-                  <AlertDialogAction onClick={spendHintNow}>Use hint</AlertDialogAction>
+                  <AlertDialogCancel className="rounded-xl font-bold">Save for later</AlertDialogCancel>
+                  <AlertDialogAction onClick={spendHintNow} className="subway-btn-gold rounded-xl font-black tracking-wider uppercase">
+                    UNLOCK NOW 📦
+                  </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
           ) : (
-            <p className="mt-2 text-sm text-muted-foreground">No hints in your inventory. SUPER SHOES checkpoints may grant one.</p>
+            <p className="mt-3 text-xs font-bold text-slate-400">Out of hints. Collect SUPER SNEAKERS at bonus stations to grab more hints!</p>
           )}
         </section>
       )}
 
       {!progress.finished ? (
-        <Button asChild size="lg" className="h-12 w-full text-base font-semibold">
-          <Link href="/play/scan">
-            <ScanLine className="size-5" /> Found it? Scan the QR
-          </Link>
-        </Button>
+        <Link
+          href="/play/scan"
+          className="subway-btn-gold h-14 w-full rounded-2xl flex items-center justify-center gap-2 font-heading text-base font-black tracking-wider uppercase"
+        >
+          <ScanLine className="size-6 stroke-[3]" />
+          <span>FOUND THE STATION? SCAN QR 🛹</span>
+        </Link>
       ) : (
-        <Button asChild size="lg" className="h-12 w-full">
-          <Link href="/play/complete">View finish</Link>
-        </Button>
+        <Link
+          href="/play/complete"
+          className="subway-btn-gold h-14 w-full rounded-2xl flex items-center justify-center gap-2 font-heading text-base font-black tracking-wider uppercase"
+        >
+          <Flag className="size-5 stroke-[2.5]" />
+          <span>VIEW FINISH SCREEN</span>
+        </Link>
       )}
     </div>
   );

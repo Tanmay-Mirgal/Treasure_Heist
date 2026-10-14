@@ -38,126 +38,171 @@ export function TeamDashboard() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <p className="text-xs font-medium uppercase tracking-[0.25em] text-muted-foreground">
-          {team.username} · Team #{team.number}
-        </p>
-        <h1 className="font-heading text-2xl font-semibold">{team.name}</h1>
+      {/* Team Profile & Identity Header */}
+      <div className="relative overflow-hidden rounded-3xl border-2 border-slate-700 bg-gradient-to-r from-slate-900/95 via-slate-900/85 to-slate-900/95 p-5 shadow-xl backdrop-blur-xl">
+        <div className="absolute inset-x-0 top-0 h-1.5 subway-hazard opacity-80" />
+        <div className="flex items-center justify-between gap-3 pt-1">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="rounded-md border border-yellow-400/50 bg-yellow-400/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-yellow-300">
+                SURFER CREW #{team.number}
+              </span>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{team.username}</span>
+            </div>
+            <h1 className="mt-1 font-heading text-2xl font-black tracking-tight text-white">{team.name}</h1>
+          </div>
+          <div className="shrink-0 text-right">
+            <span className="text-[10px] font-black uppercase tracking-wider text-amber-400">COINS BAG</span>
+            <div className="hud-number font-heading text-2xl font-black text-amber-300 drop-shadow-[0_2px_8px_rgba(245,158,11,0.6)]">
+              {team.score} <span className="text-xs font-bold text-amber-400">COINS</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {unread.length > 0 && (
-        <Alert className="border-warn/40 bg-warn/10">
-          <Bell className="text-warn" />
-          <AlertTitle className="text-warn">
-            {unread.length} new alert{unread.length > 1 ? "s" : ""}
+        <Alert className="border-2 border-orange-400/60 bg-gradient-to-r from-orange-500/20 via-orange-500/10 to-transparent shadow-xl backdrop-blur-md">
+          <Bell className="size-5 text-orange-400 animate-bounce" />
+          <AlertTitle className="font-heading font-black text-orange-300 flex items-center justify-between">
+            <span>{unread.length} NEW SUBWAY DISPATCH{unread.length > 1 ? "ES" : ""}</span>
           </AlertTitle>
           <AlertDescription>
-            <ul className="mt-1 space-y-1.5">
+            <ul className="mt-1.5 space-y-1.5">
               {unread.slice(0, 3).map((n) => (
-                <li key={n.id} className="text-foreground/90">
+                <li key={n.id} className="text-sm font-bold text-slate-100">
                   {n.message}
                 </li>
               ))}
             </ul>
-            <Button size="sm" variant="ghost" className="mt-2 -ml-2 text-warn" onClick={markAllRead} disabled={marking}>
-              <CheckCheck className="size-4" /> Mark as read
+            <Button size="sm" variant="ghost" className="mt-2.5 -ml-2 text-xs font-bold text-orange-300 hover:bg-orange-500/20" onClick={markAllRead} disabled={marking}>
+              <CheckCheck className="size-4 mr-1" /> Clear dispatches
             </Button>
           </AlertDescription>
         </Alert>
       )}
 
-      <section className="rounded-2xl border border-signal/25 bg-card p-5" aria-labelledby="mission-status">
-        <div className="flex items-center justify-between gap-2">
-          <h2 id="mission-status" className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-            {progress.finished ? "Mission complete" : `Mission ${progress.currentMission} of ${progress.total}`}
-          </h2>
+      {/* Main Mission Control Card */}
+      <section className="relative overflow-hidden rounded-3xl border-2 border-cyan-400/40 bg-gradient-to-b from-slate-900/95 via-slate-900/90 to-slate-950 p-6 shadow-2xl backdrop-blur-xl" aria-labelledby="mission-status">
+        <div className="absolute inset-x-0 top-0 h-1.5 subway-hazard" />
+        
+        <div className="flex items-center justify-between gap-2 pt-1">
+          <div className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-[0.2em] text-cyan-400">
+            <span className="size-2 rounded-full bg-cyan-400 motion-safe:animate-ping" />
+            <span id="mission-status">
+              {progress.finished ? "★ ALL STATIONS CLEARED ★" : `RAILWAY TRACK ${progress.currentMission} OF ${progress.total}`}
+            </span>
+          </div>
           {mission.lastAction && mission.lastAction !== "NORMAL" && !progress.finished && <ActionBadge action={mission.lastAction} />}
         </div>
-        <p className="mt-2 font-heading text-xl font-semibold">
+
+        <p className="mt-3 font-heading text-xl font-black leading-snug text-white">
           {progress.finished
-            ? "Vault opened. Well played, crew."
+            ? "Vault Breached! Victory is yours, runners!"
             : mission.kind === "ANSWER"
-              ? "Challenge waiting — submit your answer."
+              ? "Station challenge unlocked — crack the passkey."
               : mission.kind === "START"
-                ? "Solve your starting riddle and find checkpoint 1."
+                ? "Read your starting station clue and hit the tracks."
                 : mission.kind === "UNCONFIGURED"
-                  ? "Your route isn't configured yet."
-                  : "Follow your latest clue to the next checkpoint."}
+                  ? "Awaiting railway schedule from control room."
+                  : "Follow active route clues to the next railway station."}
         </p>
-        <div className="mt-4">
+
+        {/* Railway Line with ties & hoverboard */}
+        <div className="mt-5 rounded-2xl border-2 border-slate-800 bg-slate-950/80 p-3.5 shadow-inner">
           <StationLine completed={progress.completed} total={progress.total} finished={progress.finished} />
         </div>
-        <div className="mt-5 grid grid-cols-2 gap-2">
+
+        {/* Chunky 3D Arcade Action Buttons */}
+        <div className="mt-6 grid grid-cols-2 gap-3">
           {progress.finished ? (
-            <Button asChild size="lg" className="col-span-2 h-12 text-base font-semibold">
-              <Link href="/play/complete">
-                <Flag className="size-5" /> View finish
-              </Link>
-            </Button>
+            <Link
+              href="/play/complete"
+              className="col-span-2 subway-btn-gold h-14 rounded-2xl flex items-center justify-center gap-2 font-heading text-base font-black tracking-wider uppercase"
+            >
+              <Flag className="size-5 stroke-[2.5]" />
+              <span>VIEW VICTORY VAULT</span>
+            </Link>
           ) : (
             <>
-              <Button asChild size="lg" className="h-12 text-base font-semibold">
-                <Link href="/play/scan">
-                  <ScanLine className="size-5" /> Scan QR
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="h-12 text-base">
-                <Link href="/play/mission">
-                  <Map className="size-5" /> {mission.kind === "ANSWER" ? "Answer" : "View clue"}
-                </Link>
-              </Button>
+              <Link
+                href="/play/scan"
+                className="subway-btn-gold h-14 rounded-2xl flex items-center justify-center gap-2 font-heading text-base font-black tracking-wider uppercase"
+              >
+                <ScanLine className="size-5 stroke-[3]" />
+                <span>SCAN QR 🛹</span>
+              </Link>
+
+              <Link
+                href="/play/mission"
+                className="subway-btn-cyan h-14 rounded-2xl flex items-center justify-center gap-2 font-heading text-base font-black tracking-wider uppercase"
+              >
+                <Map className="size-5 stroke-[2.5]" />
+                <span>{mission.kind === "ANSWER" ? "ENTER CODE" : "READ INTEL"}</span>
+              </Link>
             </>
           )}
         </div>
       </section>
 
+      {/* Mission Clock / Countdown */}
       {event.timer.enabled && (
-        <div className="flex items-center justify-between rounded-xl border bg-card/70 px-4 py-3">
-          <span className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Timer className="size-4 text-signal" /> {event.status === "SETUP" ? "Mission clock" : "Time remaining"}
+        <div className="flex items-center justify-between rounded-2xl border-2 border-slate-700 bg-gradient-to-r from-slate-900/90 to-slate-950 px-4 py-3 shadow-md backdrop-blur-md">
+          <span className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-400">
+            <Timer className="size-4 text-cyan-400" /> {event.status === "SETUP" ? "Subway Clock" : "Time to Vault Close"}
           </span>
-          <span className={`hud-number text-xl font-semibold ${remaining !== null && remaining < 5 * 60_000 ? "text-danger" : "text-signal"}`}>
+          <span className={`hud-number font-heading text-2xl font-black ${remaining !== null && remaining < 5 * 60_000 ? "text-red-400 animate-pulse drop-shadow-[0_0_10px_rgba(248,113,113,0.8)]" : "text-cyan-300 drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]"}`}>
             {event.status === "SETUP" ? formatDuration(event.timer.durationMs) : formatDuration(remaining)}
           </span>
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-2">
-        <StatTile label="Points" value={team.score} tone="gold" icon={<Coins className="size-3.5" />} />
-        <StatTile label="Secured" value={`${progress.completed}/${progress.total}`} tone="ok" icon={<CheckCheck className="size-3.5" />} hint={`${progress.remaining} remaining`} />
-        <StatTile label="Hints" value={inventory.hintsAvailable} tone="signal" icon={<Lightbulb className="size-3.5" />} hint={`${inventory.hintsUsed} used`} />
-        <StatTile label="Power-ups" value={magnets.length} tone="warn" icon={<Magnet className="size-3.5" />} hint={magnets.length ? "MAGNET ready" : "none ready"} />
+      {/* Gamified HUD Stat Tiles */}
+      <div className="grid grid-cols-2 gap-2.5">
+        <StatTile label="Coins Loot" value={team.score} tone="gold" icon={<Coins className="size-4" />} />
+        <StatTile label="Stations Cleared" value={`${progress.completed}/${progress.total}`} tone="ok" icon={<CheckCheck className="size-4" />} hint={`${progress.remaining} to finish line`} />
+        <StatTile label="Mystery Clues" value={inventory.hintsAvailable} tone="signal" icon={<Lightbulb className="size-4" />} hint={`${inventory.hintsUsed} deployed`} />
+        <StatTile label="Power-ups" value={magnets.length} tone="warn" icon={<Magnet className="size-4" />} hint={magnets.length ? "MAGNET ready" : "empty"} />
       </div>
 
+      {/* MAGNET Tactical Weapon Card */}
       {magnets.length > 0 && (
         <Link
           href={`/play/magnet?id=${magnets[0]!.id}`}
-          className="flex items-center gap-3 rounded-xl border border-warn/40 bg-warn/10 p-4 transition-colors hover:bg-warn/15"
+          className="group relative flex items-center gap-4 overflow-hidden rounded-2xl border-2 border-orange-400 bg-gradient-to-r from-orange-500/25 via-amber-500/20 to-orange-500/15 p-4 shadow-[0_0_25px_rgba(251,146,60,0.4)] transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
         >
-          <Magnet className="size-6 text-warn" aria-hidden />
-          <div className="flex-1">
-            <div className="font-semibold text-warn">MAGNET ready</div>
-            <div className="text-xs text-foreground/80">Pull up to {state.rules.magnet.maxTransfer} points from a rival team.</div>
+          <div className="pointer-events-none absolute -right-4 -top-4 size-20 rounded-full bg-orange-500/30 blur-xl group-hover:scale-150 transition-transform" />
+          <div className="grid size-12 place-items-center rounded-xl bg-orange-500/30 border-2 border-orange-400 text-orange-300 shadow-[0_0_15px_rgba(251,146,60,0.6)]">
+            <Magnet className="size-6 group-hover:rotate-12 transition-transform" aria-hidden />
           </div>
-          <span className="text-sm font-medium text-warn">Use →</span>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="font-heading font-black text-orange-300 tracking-wide">COIN MAGNET READY!</span>
+              <span className="rounded-full bg-orange-400/30 px-1.5 py-0.2 text-[9px] font-black uppercase text-orange-200 border border-orange-300">ACTIVE</span>
+            </div>
+            <div className="text-xs text-slate-200 font-bold mt-0.5">Snatch up to {state.rules.magnet.maxTransfer} coins from rival crews!</div>
+          </div>
+          <span className="subway-btn-orange rounded-xl px-3.5 py-1.5 text-xs font-black uppercase tracking-wider">
+            FIRE ⚡
+          </span>
         </Link>
       )}
 
       <TrackDivider />
 
-      <div className="grid grid-cols-2 gap-2">
-        <Button asChild variant="secondary" className="h-11">
+      {/* Quick Access Grid */}
+      <div className="grid grid-cols-2 gap-2.5">
+        <Button asChild variant="secondary" className="h-12 font-bold hover:scale-[1.02] active:scale-[0.98] transition-all border border-border/50">
           <Link href="/play/score">
-            <Wallet className="size-4" /> My Score
+            <Wallet className="size-4 text-amber-400 mr-1.5" /> Loot History
           </Link>
         </Button>
-        <Button asChild variant="secondary" className="h-11">
+        <Button asChild variant="secondary" className="h-12 font-bold hover:scale-[1.02] active:scale-[0.98] transition-all border border-border/50">
           <Link href="/leaderboard">
-            <Trophy className="size-4" /> Leaderboard
+            <Trophy className="size-4 text-amber-400 mr-1.5" /> Live Board
           </Link>
         </Button>
-        <HelpDialog className="h-11" />
-        <LogoutButton className="h-11" />
+        <HelpDialog className="h-12 font-bold hover:scale-[1.02] active:scale-[0.98] transition-all border border-border/50" />
+        <LogoutButton className="h-12 font-bold hover:scale-[1.02] active:scale-[0.98] transition-all border border-border/50" />
       </div>
     </div>
   );

@@ -14,7 +14,7 @@ import { DEFAULT_RULES, type EventStatus, type GameRules, type RankingRule } fro
 import { ApiError, conflict, notFound } from "../http";
 import { audit, type AdminActor } from "./audit";
 import { ready } from "./bootstrap";
-import { clearTeamGameData } from "./admin-teams";
+import { clearTeamGameData, resetAllTeamScores } from "./admin-teams";
 import { liveValidation } from "./admin-content";
 import { computeLeaderboard } from "./leaderboard";
 import { getSettings, publicEventView, rulesOf, timerOf, type Settings } from "./settings";
@@ -98,7 +98,7 @@ export async function updateSettings(actor: AdminActor, patch: SettingsPatch, re
 /* Event controls                                                      */
 /* ------------------------------------------------------------------ */
 
-export const EVENT_ACTIONS = ["start", "pause", "resume", "end", "freeze", "unfreeze", "test-mode-on", "test-mode-off", "reset"] as const;
+export const EVENT_ACTIONS = ["start", "pause", "resume", "end", "freeze", "unfreeze", "test-mode-on", "test-mode-off", "reset", "reset-scores"] as const;
 export type EventAction = (typeof EVENT_ACTIONS)[number];
 
 async function purgeRehearsalData(initialHints: number) {
@@ -172,6 +172,10 @@ export async function eventAction(actor: AdminActor, action: EventAction, reason
       await purgeRehearsalData(initialHints);
       set.testMode = false;
       note = "Test data cleared; all teams reset to 0.";
+      break;
+    case "reset-scores":
+      await resetAllTeamScores(actor, reason || "All team scores reset to 0 by admin");
+      note = "All team scores were reset to 0.";
       break;
     case "reset":
       need("SETUP", "ENDED");

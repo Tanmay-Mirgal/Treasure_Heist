@@ -61,7 +61,7 @@ type Detail = {
   issues: { id: string; message: string; status: string; at: string }[];
 };
 
-type Tool = "verify" | "adjust" | "reset-scan" | "rollback" | "note" | "message" | "reset-progress" | null;
+type Tool = "verify" | "adjust" | "reset-score" | "reset-scan" | "rollback" | "note" | "message" | "reset-progress" | null;
 
 export function TeamDetailClient({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -122,6 +122,9 @@ export function TeamDetailClient({ params }: { params: Promise<{ id: string }> }
           <Button variant="outline" onClick={() => setTool("adjust")}>
             <Minus className="size-4" /> Correct score
           </Button>
+          <Button variant="outline" onClick={() => setTool("reset-score")} disabled={team.score === 0}>
+            <RotateCcw className="size-4" /> Reset points to 0
+          </Button>
           <Button variant="outline" onClick={() => setTool("rollback")} disabled={team.currentPosition === 0}>
             <RotateCcw className="size-4" /> Restore earlier state
           </Button>
@@ -135,7 +138,7 @@ export function TeamDetailClient({ params }: { params: Promise<{ id: string }> }
             <NotebookPen className="size-4" /> Add note
           </Button>
           <Button variant="destructive" onClick={() => setTool("reset-progress")}>
-            <Trash2 className="size-4" /> Reset progress (pre-event)
+            <Trash2 className="size-4" /> Reset progress
           </Button>
         </div>
         {team.adminNotes.length > 0 && (
@@ -358,6 +361,15 @@ export function TeamDetailClient({ params }: { params: Promise<{ id: string }> }
         </div>
       </ReasonDialog>
       <ReasonDialog
+        open={tool === "reset-score"}
+        onOpenChange={(o) => !o && setTool(null)}
+        title={`Reset points to 0 for ${team.name}`}
+        description={`Sets score to 0 (current: ${team.score}). A negative ledger adjustment is recorded and the team is notified.`}
+        destructive
+        confirmLabel="Reset points to 0"
+        onConfirm={(reason) => recover({ action: "reset-score", reason }, "Team points reset to 0")}
+      />
+      <ReasonDialog
         open={tool === "reset-scan"}
         onOpenChange={(o) => !o && setTool(null)}
         title="Reset incomplete scan"
@@ -368,7 +380,7 @@ export function TeamDetailClient({ params }: { params: Promise<{ id: string }> }
         open={tool === "reset-progress"}
         onOpenChange={(o) => !o && setTool(null)}
         title="Reset all progress for this team"
-        description="Only allowed before the event starts. Deletes this team's completions, ledger, power-ups, hints, notifications and scans."
+        description="Wipes this team's checkpoint completions, score, ledger, power-ups, hints, notifications and scans back to starting state."
         destructive
         confirmLabel="Reset team"
         onConfirm={(reason) => recover({ action: "reset-progress", reason }, "Team progress reset")}

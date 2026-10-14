@@ -441,11 +441,10 @@ export async function messageTeam(actor: AdminActor, id: string, text: string) {
   await audit(actor, { action: "TEAM_MESSAGE", entityType: "Team", entityId: id, after: { text } });
 }
 
-/** Wipe one team's game data. Only allowed before the event starts. */
+/** Wipe one team's game data (allowed at any time by the admin). */
 export async function resetTeamProgress(actor: AdminActor, id: string, reason: string) {
   const team = await loadTeam(id);
   const settings = await getSettings();
-  if (settings.status !== "SETUP") throw conflict("Team progress can only be reset before the event starts. Use rollback during the event.");
   await clearTeamGameData([team._id], rulesOf(settings).hints.initialPerTeam);
   await audit(actor, {
     action: "TEAM_PROGRESS_RESET",
@@ -454,6 +453,58 @@ export async function resetTeamProgress(actor: AdminActor, id: string, reason: s
     before: { currentPosition: team.currentPosition, score: team.score },
     after: { currentPosition: 0, score: 0 },
     reason,
+  });
+}
+
+/** Reset a team's score/points to 0 without clearing their clue position. */
+export async function resetTeamScore(actor: AdminActor, id: string, reason: string) {
+  const team = await loadTeam(id);
+  if (team.score === 0) return { score: 0 };
+  return adjustScore(actor, id, -team.score, reason || "Score reset to 0 by admin", true);
+}
+
+/** Reset all teams' scores to 0 (admin privilege). */
+export async function resetAllTeamScores(actor: AdminActor, reason: string) {
+  await ready();
+  const isTest = await isRehearsal();
+  return withTransaction(async (session) => {
+    const teams = await Team.find({ score: { $gt: 0 } }).session(session).lean<TeamDoc[]>();
+    const now = new Date();
+    for (const t of teams) {
+      await Team.updateOne({ _id: t._id }, { $set: { score: 0, scoreChangedAt: now } }, { session });
+      await ScoreTransaction.create(
+        [
+          {
+            team: t._id,
+            delta: -t.score,
+            balanceAfter: 0,
+            type: "ADMIN_ADJUSTMENT",
+            idempotencyKey: `admin:reset-all:${t._id}:${randomUUID()}`,
+            reason,
+            adminUsername: actor.username,
+            isTest,
+          },
+        ],
+        { session },
+      );
+      await Notification.create(
+        [{ team: t._id, type: "ORGANIZER", message: `Your points were reset to 0 by the organizer. Reason: ${reason}`, isTest }],
+        { session },
+      );
+    }
+    await audit(
+      actor,
+      {
+        action: "SCORE_ADJUST",
+        entityType: "EventSettings",
+        entityId: "event",
+        before: { affectedTeams: teams.length },
+        after: { resetScores: 0 },
+        reason,
+      },
+      session,
+    );
+    return { teamsReset: teams.length };
   });
 }
 

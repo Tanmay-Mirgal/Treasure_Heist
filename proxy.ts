@@ -28,13 +28,9 @@ export async function proxy(req: NextRequest) {
   if (pathname.startsWith("/play")) {
     return (await isValid(TEAM_COOKIE, "team")) ? NextResponse.next() : toLogin("/login");
   }
-  if (pathname === "/leaderboard") {
-    const ok = (await isValid(TEAM_COOKIE, "team")) || (await isValid(ADMIN_COOKIE, "admin"));
-    return ok ? NextResponse.next() : toLogin("/login");
-  }
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/play/:path*", "/admin/:path*", "/leaderboard"],
+  matcher: ["/play/:path*", "/admin/:path*"],
 };

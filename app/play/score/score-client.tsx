@@ -53,15 +53,29 @@ export function ScoreClient() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground">My score</p>
-        <h1 className="font-heading text-2xl font-semibold">{data.team.name}</h1>
+      {/* Team Loot Header */}
+      <div className="relative overflow-hidden rounded-3xl border-2 border-amber-400 bg-gradient-to-b from-slate-900/95 via-slate-900/85 to-slate-950 p-6 shadow-2xl backdrop-blur-xl">
+        <div className="absolute inset-x-0 top-0 h-1.5 subway-hazard" />
+        <div className="flex items-center justify-between gap-3 pt-1">
+          <div>
+            <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-amber-400">
+              <Coins className="size-3.5 text-amber-400 drop-shadow" />
+              ★ RUNNER&apos;S LOOT VAULT ★
+            </div>
+            <h1 className="mt-1 font-heading text-2xl font-black tracking-tight text-white">{data.team.name}</h1>
+          </div>
+          <div className="rounded-2xl border-2 border-amber-400/60 bg-gradient-to-b from-amber-400/20 to-amber-500/10 px-5 py-2.5 text-right shadow-[0_2px_18px_rgba(245,158,11,0.35)]">
+            <span className="text-[10px] font-black uppercase tracking-wider text-amber-300">TOTAL COINS</span>
+            <div className="hud-number font-heading text-3xl font-black text-amber-300 drop-shadow-[0_2px_10px_rgba(245,158,11,0.6)]">
+              {data.score}
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
-        <StatTile label="Current score" value={data.score} tone="gold" className="col-span-2 border-gold/30" />
-        <StatTile label="Secured" value={`${data.completed}/${data.total}`} tone="ok" hint={`${data.remaining} missions left`} />
-        <StatTile label="Deductions" value={data.deductions} tone={data.deductions < 0 ? "danger" : "muted"} />
+      <div className="grid grid-cols-2 gap-2.5">
+        <StatTile label="Stations Cleared" value={`${data.completed}/${data.total}`} tone="ok" hint={`${data.remaining} to finish line`} />
+        <StatTile label="Deductions" value={data.deductions} tone={data.deductions < 0 ? "danger" : "muted"} hint="Penalties or rival siphons" />
       </div>
 
       <section aria-labelledby="breakdown">

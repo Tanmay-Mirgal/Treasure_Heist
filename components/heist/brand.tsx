@@ -1,31 +1,41 @@
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
-/** Original mark: a vault dial crossed by two rails. */
+/** Subway Surfers 3D Game Icon Mark */
 export function HeistMark({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 48 48" aria-hidden="true" className={cn("size-9", className)}>
-      <rect x="1.5" y="1.5" width="45" height="45" rx="11" fill="var(--surface-2)" stroke="var(--rail)" />
-      <path d="M6 33h36M6 38h36" stroke="var(--rail)" strokeWidth="1.5" />
-      <path d="M11 31v9M17 31v9M23 31v9M29 31v9M35 31v9" stroke="var(--rail)" strokeWidth="1.2" />
-      <circle cx="24" cy="19" r="11" fill="none" stroke="var(--gold)" strokeWidth="2.5" />
-      <circle cx="24" cy="19" r="4" fill="var(--gold)" />
-      <path d="M24 8v4M24 26v4M13 19h4M31 19h4" stroke="var(--gold)" strokeWidth="2" strokeLinecap="round" />
-      <path d="M24 19l5.5-5.5" stroke="var(--signal)" strokeWidth="2" strokeLinecap="round" />
-    </svg>
+    <div
+      className={cn(
+        "relative inline-flex size-10 shrink-0 overflow-hidden rounded-2xl border-2 border-yellow-400 bg-slate-950 shadow-[0_4px_16px_rgba(245,158,11,0.5)] transition-transform duration-200 hover:scale-105 active:scale-95",
+        className,
+      )}
+    >
+      <Image
+        src="/logo.png"
+        alt="Subway Heist Game Logo"
+        width={64}
+        height={64}
+        className="size-full object-cover"
+        priority
+      />
+    </div>
   );
 }
 
 export function Wordmark({ className, tagline = false }: { className?: string; tagline?: boolean }) {
   return (
-    <div className={cn("flex items-center gap-2.5", className)}>
-      <HeistMark />
-      <div className="leading-none">
-        <div className="font-heading text-lg font-bold tracking-[0.18em] text-foreground">
-          THE <span className="text-gold">HEIST</span>
+    <div className={cn("flex items-center gap-2.5 select-none", className)}>
+      <HeistMark className="drop-shadow-[0_4px_12px_rgba(245,158,11,0.4)]" />
+      <div className="leading-tight">
+        <div className="flex items-center gap-1.5 font-heading text-lg font-black tracking-wider uppercase text-foreground">
+          <span className="text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">SUBWAY</span>
+          <span className="bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 bg-clip-text text-transparent drop-shadow-[0_2px_8px_rgba(245,158,11,0.6)]">
+            HEIST
+          </span>
         </div>
         {tagline && (
-          <div className="mt-1 text-[10px] font-medium uppercase tracking-[0.32em] text-muted-foreground">
-            Decode · Discover · Escape
+          <div className="mt-0.5 flex items-center gap-1 text-[10px] font-black uppercase tracking-[0.2em] text-cyan-400">
+            <span>SURF THE CAMPUS TRACKS</span>
           </div>
         )}
       </div>
