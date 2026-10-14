@@ -6,30 +6,57 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "db:setup": "tsx scripts/setup.ts",
+    "db:seed": "tsx scripts/seed-admin.ts && tsx scripts/seed-teams.ts",
+    "db:seed:admin": "tsx scripts/seed-admin.ts",
+    "db:seed:teams": "tsx scripts/seed-teams.ts",
+    "db:import": "tsx scripts/import-heist-data.ts",
+    "db:validate": "tsx scripts/import-heist-data.ts --dry-run",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@zxing/browser": "^0.2.1",
     "@zxing/library": "^0.23.0",
     "bcryptjs": "^3.0.3",
+    "class-variance-authority": "^0.7.1",
+    "cn": "^0.4.0",
     "exceljs": "^4.4.0",
     "jose": "^6.2.12",
     "lucide-react": "^1.49.0",
     "mongoose": "^9.10.3",
     "next": "16.4.0",
+    "next-themes": "^0.4.6",
     "qrcode": "^1.5.4",
+    "radix-ui": "^1.8.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "server-only": "^0.0.1",
+    "shadcn": "^4.21.4",
+    "sonner": "^2.0.8",
+    "tw-animate-css": "^1.4.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/turbopack": "^4",
-    "@types/node": "^20",
+    "@types/node": "^22.20.5",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.0",
+    "mongodb-memory-server": "^11.3.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "tsx": "^4.23.15",
+    "typescript": "^5",
+    "vite": "^7.3.7",
+    "vitest": "^5.0.2"
+  },
+  "engines": {
+    "node": ">=20.9"
   }
 }

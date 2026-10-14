@@ -1,26 +1,215 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * THE HEIST design tokens.
+ * Night-shift subway palette: charcoal/navy surfaces, gold for coins and
+ * rewards, electric blue for active mission state, orange for special
+ * actions/warnings, green for secured checkpoints, red for errors.
+ */
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-display);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+
+  /* Brand signal colours */
+  --color-gold: var(--gold);
+  --color-signal: var(--signal);
+  --color-warn: var(--warn);
+  --color-ok: var(--ok);
+  --color-danger: var(--danger);
+  --color-rail: var(--rail);
+  --color-surface-2: var(--surface-2);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* The app is dark-only by design; :root and .dark share the palette. */
+:root,
+.dark {
+  --background: oklch(0.155 0.018 262);
+  --foreground: oklch(0.95 0.01 250);
+  --card: oklch(0.195 0.022 262);
+  --card-foreground: oklch(0.95 0.01 250);
+  --popover: oklch(0.21 0.024 262);
+  --popover-foreground: oklch(0.95 0.01 250);
+  --primary: oklch(0.86 0.17 92);
+  --primary-foreground: oklch(0.2 0.03 80);
+  --secondary: oklch(0.25 0.025 262);
+  --secondary-foreground: oklch(0.93 0.01 250);
+  --muted: oklch(0.235 0.022 262);
+  --muted-foreground: oklch(0.7 0.025 255);
+  --accent: oklch(0.27 0.03 262);
+  --accent-foreground: oklch(0.96 0.01 250);
+  --destructive: oklch(0.68 0.2 25);
+  --border: oklch(1 0 0 / 9%);
+  --input: oklch(1 0 0 / 13%);
+  --ring: oklch(0.7 0.16 245);
+  --chart-1: oklch(0.86 0.17 92);
+  --chart-2: oklch(0.7 0.16 245);
+  --chart-3: oklch(0.76 0.16 55);
+  --chart-4: oklch(0.8 0.16 160);
+  --chart-5: oklch(0.68 0.2 25);
+  --radius: 0.7rem;
+  --sidebar: oklch(0.175 0.02 262);
+  --sidebar-foreground: oklch(0.93 0.01 250);
+  --sidebar-primary: oklch(0.86 0.17 92);
+  --sidebar-primary-foreground: oklch(0.2 0.03 80);
+  --sidebar-accent: oklch(0.25 0.025 262);
+  --sidebar-accent-foreground: oklch(0.96 0.01 250);
+  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-ring: oklch(0.7 0.16 245);
+
+  --gold: oklch(0.86 0.17 92);
+  --signal: oklch(0.72 0.16 245);
+  --warn: oklch(0.77 0.16 55);
+  --ok: oklch(0.8 0.16 160);
+  --danger: oklch(0.68 0.2 25);
+  --rail: oklch(1 0 0 / 14%);
+  --surface-2: oklch(0.225 0.025 262);
+  color-scheme: dark;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-background text-foreground;
+    background-image:
+      radial-gradient(1200px 600px at 50% -200px, oklch(0.3 0.06 262 / 0.45), transparent 70%);
+    background-attachment: fixed;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  /* Two rails with sleepers — the subway-track divider. */
+  .track-divider {
+    position: relative;
+    height: 14px;
+    background:
+      linear-gradient(var(--rail), var(--rail)) top 3px left 0 / 100% 1px no-repeat,
+      linear-gradient(var(--rail), var(--rail)) bottom 3px left 0 / 100% 1px no-repeat,
+      repeating-linear-gradient(90deg, var(--rail) 0 2px, transparent 2px 18px);
+    opacity: 0.8;
+    mask-image: linear-gradient(90deg, transparent, black 12%, black 88%, transparent);
+  }
+  .hud-number {
+    font-family: var(--font-geist-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+  .clue-text {
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+  }
+  .signal-dot {
+    display: inline-block;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 9999px;
+    background: currentColor;
+    box-shadow: 0 0 0 3px color-mix(in oklch, currentColor 22%, transparent);
+  }
+  .scan-frame {
+    --c: var(--gold);
+    background:
+      linear-gradient(var(--c), var(--c)) top left / 28px 3px no-repeat,
+      linear-gradient(var(--c), var(--c)) top left / 3px 28px no-repeat,
+      linear-gradient(var(--c), var(--c)) top right / 28px 3px no-repeat,
+      linear-gradient(var(--c), var(--c)) top right / 3px 28px no-repeat,
+      linear-gradient(var(--c), var(--c)) bottom left / 28px 3px no-repeat,
+      linear-gradient(var(--c), var(--c)) bottom left / 3px 28px no-repeat,
+      linear-gradient(var(--c), var(--c)) bottom right / 28px 3px no-repeat,
+      linear-gradient(var(--c), var(--c)) bottom right / 3px 28px no-repeat;
+  }
+}
+
+@keyframes heist-sweep {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(var(--sweep, 220px));
+    opacity: 0;
+  }
+}
+.scan-sweep {
+  animation: heist-sweep 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .scan-sweep {
+    display: none;
+  }
+}
+
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  .no-print {
+    display: none !important;
+  }
 }
