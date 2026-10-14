@@ -68,24 +68,78 @@ export function MissionClient() {
     }
   }
 
+  const nextStationNum = mission.nextStationNumber ?? progress.nextStation ?? (progress.completed + 1);
+  const currentStationNum = mission.stationNumber ?? (mission.isStaged ? progress.activeStation : progress.completed);
+
   const eyebrow =
     mission.kind === "START"
-      ? "Starting clue"
+      ? "Starting Clue"
       : mission.kind === "ANSWER"
-        ? "Checkpoint challenge"
+        ? "Checkpoint Challenge"
         : mission.kind === "FINISHED"
-          ? "Mission complete"
-          : `Clue from checkpoint ${progress.completed}`;
+          ? "Mission Complete"
+          : mission.isStaged
+            ? `Active Question — Station ${currentStationNum ?? 1}`
+            : `Clue from checkpoint ${progress.completed}`;
 
   return (
     <div className="space-y-4">
+      {/* Active Question Intel Banner */}
+      {mission.isStaged && (
+        <div className="relative overflow-hidden rounded-3xl border-2 border-yellow-400/80 bg-gradient-to-r from-yellow-500/20 via-slate-900 to-amber-500/20 p-4 shadow-[0_0_25px_rgba(250,204,21,0.3)] backdrop-blur-xl">
+          <div className="absolute inset-x-0 top-0 h-1 subway-hazard" />
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="flex size-2.5 rounded-full bg-yellow-400 motion-safe:animate-ping" />
+              <span className="font-heading text-xs font-black uppercase tracking-wider text-yellow-300">
+                ★ ACTIVE STATION QUESTION ★
+              </span>
+            </div>
+            <span className="rounded-full border border-yellow-400/60 bg-yellow-400/20 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-yellow-300">
+              UNSOLVED
+            </span>
+          </div>
+
+          <div className="mt-2.5 rounded-2xl border border-yellow-400/30 bg-black/40 p-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs font-bold text-slate-300">
+              <span className="text-white">
+                🎯 Target: <span className="font-black text-cyan-400">Station #{nextStationNum}</span>
+              </span>
+              <span className="text-yellow-300 font-black">
+                💰 Bounty: +{mission.pendingPoints ?? 1} Coins on verification
+              </span>
+            </div>
+            <p className="mt-1 text-[11px] font-medium leading-relaxed text-slate-400">
+              Solve the riddle below to find Station #{nextStationNum}. Points for Station #{currentStationNum} will be unlocked only when Station #{nextStationNum} is verified!
+            </p>
+          </div>
+        </div>
+      )}
+
+      {mission.kind === "START" && (
+        <div className="relative overflow-hidden rounded-3xl border-2 border-cyan-400/80 bg-gradient-to-r from-cyan-500/20 via-slate-900 to-cyan-500/10 p-4 shadow-[0_0_25px_rgba(6,182,212,0.3)] backdrop-blur-xl">
+          <div className="absolute inset-x-0 top-0 h-1 subway-hazard" />
+          <div className="flex items-center justify-between gap-2">
+            <span className="font-heading text-xs font-black uppercase tracking-wider text-cyan-300">
+              ★ STARTING INTEL CLUE ★
+            </span>
+            <span className="rounded-full border border-cyan-400/60 bg-cyan-400/20 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-cyan-300">
+              STEP 1 OF {progress.total}
+            </span>
+          </div>
+          <p className="mt-1 text-xs font-bold text-slate-300">
+            Decipher this starting clue to locate Station #1. Scan Station #1 QR to unlock your first question!
+          </p>
+        </div>
+      )}
+
       <MissionCard
         eyebrow={eyebrow}
         title={mission.title}
         text={mission.text}
         action={mission.kind === "CLUE" ? mission.lastAction : null}
         testMode={event.testMode}
-        tone={mission.kind === "FINISHED" ? "gold" : "signal"}
+        tone={mission.kind === "FINISHED" ? "gold" : mission.isStaged ? "gold" : "signal"}
       />
 
       {mission.kind === "ANSWER" && (
@@ -171,10 +225,14 @@ export function MissionClient() {
       {!progress.finished ? (
         <Link
           href="/play/scan"
-          className="subway-btn-gold h-14 w-full rounded-2xl flex items-center justify-center gap-2 px-3 font-heading text-xs sm:text-base font-black tracking-wider uppercase text-center"
+          className="subway-btn-gold h-15 w-full rounded-2xl flex items-center justify-center gap-2.5 px-3 font-heading text-xs sm:text-base font-black tracking-wider uppercase text-center shadow-[0_4px_25px_rgba(245,158,11,0.6)] transition-all hover:scale-[1.02] active:scale-[0.98]"
         >
           <ScanLine className="size-5 sm:size-6 stroke-[3] shrink-0" />
-          <span className="truncate">FOUND THE STATION? SCAN QR 🛹</span>
+          <span className="truncate">
+            {mission.isStaged
+              ? `FOUND STATION #${nextStationNum}? SCAN QR TO VERIFY 🛹`
+              : `SCAN STATION #${nextStationNum} QR 🛹`}
+          </span>
         </Link>
       ) : (
         <Link

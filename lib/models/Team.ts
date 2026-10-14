@@ -12,6 +12,23 @@ const TeamSchema = new Schema(
     score: { type: Number, default: 0, min: 0 },
     /** Number of completed checkpoints in the team's sequence (0 = not started). */
     currentPosition: { type: Number, default: 0, min: 0 },
+    /** Station that has been scanned whose question is currently active in INTEL awaiting next QR verification. */
+    stagedCheckpoint: {
+      type: new Schema(
+        {
+          position: { type: Number, required: true },
+          qr: { type: Schema.Types.ObjectId, ref: "QRCheckpoint", required: true },
+          copyId: { type: String, required: true },
+          actionType: { type: String, default: "NORMAL" },
+          clueText: { type: String, default: "" },
+          points: { type: Number, default: 0 },
+          rewardText: { type: String, default: "" },
+          scannedAt: { type: Date, default: Date.now },
+        },
+        { _id: false },
+      ),
+      default: null,
+    },
     /** Set when the team reached an answer-gated checkpoint and still owes the answer. */
     awaitingAnswer: {
       type: new Schema(

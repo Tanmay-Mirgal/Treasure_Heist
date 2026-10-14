@@ -62,9 +62,15 @@ export function ScanResultView({ result, onScanAgain }: { result: ScanResultData
         {cp && result.outcome === "ACCEPTED" && (
           <div className="mt-5 flex flex-wrap items-center justify-between gap-2.5 sm:gap-3 border-t-2 border-white/10 pt-4">
             <div className="flex items-center gap-2">
-              <span className="hud-number rounded-xl border border-yellow-300 bg-yellow-400 px-2.5 sm:px-3 py-1 font-heading text-base sm:text-lg font-black text-slate-950 shadow-[0_2px_12px_rgba(250,204,21,0.6)]">
-                +{cp.pointsAwarded} COINS
-              </span>
+              {cp.pointsAwarded > 0 ? (
+                <span className="hud-number rounded-xl border border-yellow-300 bg-yellow-400 px-2.5 sm:px-3 py-1 font-heading text-base sm:text-lg font-black text-slate-950 shadow-[0_2px_12px_rgba(250,204,21,0.6)]">
+                  +{cp.pointsAwarded} COINS
+                </span>
+              ) : (
+                <span className="rounded-xl border border-cyan-400/50 bg-cyan-500/20 px-2.5 sm:px-3 py-1 font-heading text-xs sm:text-sm font-black text-cyan-300 uppercase tracking-wide">
+                  INTEL UNLOCKED
+                </span>
+              )}
               <span className="text-xs sm:text-sm font-black text-white uppercase tracking-wider">{cp.rewardText}</span>
             </div>
             <div className="flex items-center gap-2">
@@ -87,11 +93,12 @@ export function ScanResultView({ result, onScanAgain }: { result: ScanResultData
 
       {cp?.clueText && !finished && (
         <MissionCard
-          eyebrow={`Unlocked from Station ${cp.position} of ${cp.total}`}
-          title={cp.position + 1 === cp.total ? "Final Leg — Discover The Vault" : `Next Up: Station #${cp.position + 1}`}
+          eyebrow={`Station #${cp.position} Question (Active Intel)`}
+          title={cp.position + 1 === cp.total ? "Final Leg — Discover The Vault" : `Active Station #${cp.position} Question`}
           text={cp.clueText}
           action={cp.actionType}
           testMode={result.isTest}
+          tone="gold"
         />
       )}
 

@@ -185,6 +185,7 @@ export async function completeCheckpointTx(
     lastProgressAt: now,
     lastActivityAt: now,
     awaitingAnswer: null,
+    stagedCheckpoint: null,
   };
   if (points !== 0) set.scoreChangedAt = now;
   if (isFinal) set.finishedAt = now;
@@ -302,7 +303,7 @@ export async function processScan(args: {
     TeamSequence.findOne({ team: teamId }).lean<TeamSequenceDoc>(),
   ]);
   if (!team) return reject("NOT_IN_TEAM_SEQUENCE", qr);
-  const expected = team.currentPosition + 1;
+  const expected = team.stagedCheckpoint ? team.stagedCheckpoint.position + 1 : team.currentPosition + 1;
   if (!seq || seq.entries.length === 0) return reject("NOT_IN_TEAM_SEQUENCE", qr, expected);
 
   const entry = seq.entries.find((e) => String(e.qr) === String(qr._id));
@@ -318,6 +319,29 @@ export async function processScan(args: {
     return { outcome: "ALREADY_FINISHED", scanId, message: "Your team has already opened the vault. Check the leaderboard!", score: team.score };
   }
 
+  // Repeat scan of the active staged station
+  if (team.stagedCheckpoint && entry.position === team.stagedCheckpoint.position) {
+    const scanId = settings.logDuplicateScans
+      ? await logScan({ team: teamId, outcome: "DUPLICATE", source: args.source, correlationId: args.correlationId, qr, position: entry.position, expectedPosition: expected, isTest })
+      : null;
+    return {
+      outcome: "DUPLICATE",
+      scanId,
+      message: `Station #${entry.position} is already active in your INTEL! Solve this question to locate and scan Station #${expected}.`,
+      score: team.score,
+      checkpoint: {
+        position: entry.position,
+        total,
+        actionType: qr.actionType as ActionType,
+        isFinal: entry.position === total,
+        clueText: qr.clueText,
+        pointsAwarded: 0,
+        rewardText: `Points will be awarded when Station #${expected} is verified.`,
+      },
+    };
+  }
+
+  // Checkpoint already finalized
   if (entry.position <= team.currentPosition) {
     const scanId = settings.logDuplicateScans
       ? await logScan({ team: teamId, outcome: "DUPLICATE", source: args.source, correlationId: args.correlationId, qr, position: entry.position, expectedPosition: expected, isTest })
@@ -328,7 +352,7 @@ export async function processScan(args: {
       scanId,
       message: isCurrentClue
         ? "Checkpoint already secured — no extra points. Your current clue is shown below."
-        : "Checkpoint already secured — no extra points. Follow your current clue on the mission screen.",
+        : "Checkpoint already secured — no extra points. Follow your current question on the mission screen.",
       score: team.score,
       checkpoint: isCurrentClue
         ? {
@@ -384,17 +408,143 @@ export async function processScan(args: {
     };
   }
 
+  const now = new Date();
+  const isFinal = entry.position === total;
+
+  // Case 1: Initial station check-in (e.g. Station 1, when nothing is staged yet and not final)
+  if (!team.stagedCheckpoint && !isFinal) {
+    const pointsForThis = settings.scoringEnabled ? checkpointReward(qr.actionType as ActionType, rules, qr.rewardOverride) : 0;
+    const rewText = rewardText(qr.actionType as ActionType, pointsForThis, rules, settings.scoringEnabled);
+
+    await Team.updateOne(
+      { _id: teamId, currentPosition: team.currentPosition, stagedCheckpoint: null, finishedAt: null },
+      {
+        $set: {
+          stagedCheckpoint: {
+            position: entry.position,
+            qr: qr._id,
+            copyId: qr.copyId,
+            actionType: qr.actionType,
+            clueText: qr.clueText,
+            points: pointsForThis,
+            rewardText: rewText,
+            scannedAt: now,
+          },
+          lastActivityAt: now,
+          lastProgressAt: now,
+          ...(team.gameStartedAt ? {} : { gameStartedAt: now }),
+        },
+      },
+    );
+
+    const scanId = await logScan({
+      team: teamId,
+      outcome: "ACCEPTED",
+      source: args.source,
+      correlationId: args.correlationId,
+      qr,
+      position: entry.position,
+      pointsAwarded: 0,
+      isTest,
+    });
+
+    return {
+      outcome: "ACCEPTED",
+      scanId,
+      message: `Station ${entry.position} Checked In! Solve Question #${entry.position} in INTEL to locate Station #${entry.position + 1}.`,
+      score: team.score,
+      hintsGranted: 0,
+      powerUp: null,
+      isTest,
+      checkpoint: {
+        position: entry.position,
+        total,
+        actionType: qr.actionType as ActionType,
+        isFinal: false,
+        clueText: qr.clueText,
+        pointsAwarded: 0,
+        rewardText: `Points (+${pointsForThis}) will be awarded when Station #${entry.position + 1} is verified!`,
+      },
+    };
+  }
+
+  // Case 2: We have a previous staged checkpoint (or this is the final station)
+  // Station N is verified! Complete previous station (team.stagedCheckpoint.position), award its points!
   try {
     const result = await withTransaction(async (session) => {
-      const outcome = await completeCheckpointTx(session, {
-        teamId,
-        expectedPosition: entry.position,
-        seq,
-        qr,
-        settings,
-        source: sourceOf,
-        isTest,
-      });
+      let pointsAwardedTotal = 0;
+      let newScore = team.score;
+      let powerUpId: string | null = null;
+      let hintsGrantedTotal = 0;
+
+      // 1. If there is a staged previous station, complete it now!
+      if (team.stagedCheckpoint) {
+        const prevPos = team.stagedCheckpoint.position;
+        const prevEntry = seq.entries.find((e) => e.position === prevPos);
+        const prevQr = prevEntry ? await QRCheckpoint.findById(prevEntry.qr).lean<QRCheckpointDoc>() : null;
+        if (prevQr) {
+          const prevOutcome = await completeCheckpointTx(session, {
+            teamId,
+            expectedPosition: prevPos,
+            seq,
+            qr: prevQr,
+            settings,
+            source: sourceOf,
+            isTest,
+            reason: `Verified by arriving at Station #${entry.position}`,
+          });
+          pointsAwardedTotal += prevOutcome.points;
+          newScore = prevOutcome.score;
+          if (prevOutcome.powerUpId) powerUpId = prevOutcome.powerUpId;
+          if (prevOutcome.hintsGranted) hintsGrantedTotal += prevOutcome.hintsGranted;
+        }
+      }
+
+      // 2. If this scanned station is the FINAL station (Vault), complete it as well!
+      if (isFinal) {
+        const finalOutcome = await completeCheckpointTx(session, {
+          teamId,
+          expectedPosition: entry.position,
+          seq,
+          qr,
+          settings,
+          source: sourceOf,
+          isTest,
+          reason: "Vault Breached / Final station",
+        });
+        pointsAwardedTotal += finalOutcome.points;
+        newScore = finalOutcome.score;
+        if (finalOutcome.powerUpId) powerUpId = finalOutcome.powerUpId;
+        if (finalOutcome.hintsGranted) hintsGrantedTotal += finalOutcome.hintsGranted;
+
+        await Team.updateOne({ _id: teamId }, { $set: { stagedCheckpoint: null, finishedAt: now } }, { session });
+      } else {
+        // If not final, stage this newly verified station for the next leg!
+        const nextPoints = settings.scoringEnabled ? checkpointReward(qr.actionType as ActionType, rules, qr.rewardOverride) : 0;
+        const rewText = rewardText(qr.actionType as ActionType, nextPoints, rules, settings.scoringEnabled);
+
+        await Team.updateOne(
+          { _id: teamId },
+          {
+            $set: {
+              stagedCheckpoint: {
+                position: entry.position,
+                qr: qr._id,
+                copyId: qr.copyId,
+                actionType: qr.actionType,
+                clueText: qr.clueText,
+                points: nextPoints,
+                rewardText: rewText,
+                scannedAt: now,
+              },
+              lastActivityAt: now,
+              lastProgressAt: now,
+            },
+          },
+          { session },
+        );
+      }
+
       const scanId = await logScan(
         {
           team: teamId,
@@ -403,14 +553,46 @@ export async function processScan(args: {
           correlationId: args.correlationId,
           qr,
           position: entry.position,
-          pointsAwarded: outcome.points,
+          pointsAwarded: pointsAwardedTotal,
           isTest,
         },
         session,
       );
-      return { outcome, scanId };
+
+      return {
+        scanId,
+        pointsAwardedTotal,
+        newScore,
+        powerUpId,
+        hintsGrantedTotal,
+      };
     });
-    return acceptedResult(result.scanId, result.outcome, qr, total, rules, settings, isTest);
+
+    const action = qr.actionType as ActionType;
+    return {
+      outcome: "ACCEPTED",
+      scanId: result.scanId,
+      message: isFinal
+        ? "VAULT OPENED! All stations verified and coins banked!"
+        : team.stagedCheckpoint
+          ? `Station #${entry.position} Verified! +${result.pointsAwardedTotal} coins awarded for Station #${team.stagedCheckpoint.position}. Question #${entry.position} is now active in INTEL!`
+          : `Station #${entry.position} Verified!`,
+      score: result.newScore,
+      hintsGranted: result.hintsGrantedTotal,
+      powerUp: result.powerUpId ? { id: result.powerUpId, type: "MAGNET" } : null,
+      isTest,
+      checkpoint: {
+        position: entry.position,
+        total,
+        actionType: action,
+        isFinal,
+        clueText: qr.clueText,
+        pointsAwarded: result.pointsAwardedTotal,
+        rewardText: isFinal
+          ? rewardText(action, result.pointsAwardedTotal, rules, settings.scoringEnabled)
+          : `+${result.pointsAwardedTotal} coins awarded for Station #${team.stagedCheckpoint?.position ?? entry.position - 1}!`,
+      },
+    };
   } catch (err) {
     if (err instanceof ProgressConflict || isDuplicateKeyError(err)) {
       const fresh = await Team.findById(teamId).lean<TeamDoc>();
@@ -526,15 +708,17 @@ export async function submitAnswer(args: { teamId: string; answer: string; corre
 
 /** Hint text for the mission the team is currently solving (next expected position). */
 async function hintTextFor(team: TeamDoc, seq: TeamSequenceDoc, rules: GameRules): Promise<string | null> {
-  const next = seq.entries.find((e) => e.position === team.currentPosition + 1);
+  const targetPos = team.stagedCheckpoint ? team.stagedCheckpoint.position + 1 : team.currentPosition + 1;
+  const next = seq.entries.find((e) => e.position === targetPos);
   if (!next) return null;
-  if (team.currentPosition === 0) {
+  if (!team.stagedCheckpoint && team.currentPosition === 0) {
     if (!rules.hints.fallbackToDestination) return null;
     const firstQr = await QRCheckpoint.findById(next.qr).lean<QRCheckpointDoc>();
     const where = firstQr?.placement?.label || seq.startingClue?.location;
     return where ? `Head to: ${where}.` : null;
   }
-  const current = seq.entries.find((e) => e.position === team.currentPosition);
+  const currentPos = team.stagedCheckpoint ? team.stagedCheckpoint.position : team.currentPosition;
+  const current = seq.entries.find((e) => e.position === currentPos);
   const [clueQr, nextQr] = await Promise.all([
     current ? QRCheckpoint.findById(current.qr).lean<QRCheckpointDoc>() : null,
     QRCheckpoint.findById(next.qr).lean<QRCheckpointDoc>(),
@@ -559,7 +743,7 @@ export async function spendHint(teamIdStr: string): Promise<{ text: string; hint
   if (team.finishedAt) throw new GameError("Your team has already finished.", "FINISHED");
   if (team.awaitingAnswer) throw new GameError("Hints are for location clues. Solve the current challenge first.", "AWAITING_ANSWER");
 
-  const position = team.currentPosition + 1;
+  const position = team.stagedCheckpoint ? team.stagedCheckpoint.position + 1 : team.currentPosition + 1;
   const existing = await HintUsage.findOne({ team: teamId, position }).lean();
   if (existing) return { text: existing.text, hintsAvailable: team.hints?.available ?? 0, alreadyUsed: true };
 
@@ -614,7 +798,8 @@ export async function getTeamState(teamIdStr: string) {
     Notification.countDocuments({ team: teamId, read: false }),
   ]);
   if (!team) return null;
-  const hint = await HintUsage.findOne({ team: teamId, position: team.currentPosition + 1 }).lean();
+  const hintPos = team.stagedCheckpoint ? team.stagedCheckpoint.position + 1 : team.currentPosition + 1;
+  const hint = await HintUsage.findOne({ team: teamId, position: hintPos }).lean();
   const rules = rulesOf(settings);
   const total = seq?.entries.length ?? 0;
   const completed = team.currentPosition;
@@ -627,6 +812,11 @@ export async function getTeamState(teamIdStr: string) {
     lastAction: ActionType | null;
     challengePrompt?: string;
     hint: { used: boolean; text: string | null };
+    isStaged?: boolean;
+    stationNumber?: number;
+    nextStationNumber?: number;
+    pendingPoints?: number;
+    statusLabel?: string;
   };
   const currentHint = hint?.text ?? null;
   let mission: Mission;
@@ -642,6 +832,20 @@ export async function getTeamState(teamIdStr: string) {
       lastAction: null,
       hint: { used: false, text: null },
     };
+  } else if (team.stagedCheckpoint) {
+    const staged = team.stagedCheckpoint;
+    mission = {
+      kind: "CLUE",
+      title: `Station ${staged.position} Question — Active Intel`,
+      text: staged.clueText || "Solve this station riddle to identify the next location.",
+      lastAction: (staged.actionType as ActionType) ?? null,
+      hint: { used: Boolean(currentHint), text: currentHint },
+      isStaged: true,
+      stationNumber: staged.position,
+      nextStationNumber: staged.position + 1,
+      pendingPoints: staged.points ?? 0,
+      statusLabel: `UNSOLVED — Scan Station #${staged.position + 1} to verify and earn coins!`,
+    };
   } else if (completed === 0) {
     mission = {
       kind: "START",
@@ -649,6 +853,11 @@ export async function getTeamState(teamIdStr: string) {
       text: seq.startingClue?.riddle || "Your starting clue has not been configured. Contact the Event Desk.",
       lastAction: null,
       hint: { used: Boolean(currentHint), text: currentHint },
+      isStaged: false,
+      stationNumber: 1,
+      nextStationNumber: 1,
+      pendingPoints: 0,
+      statusLabel: "Find and scan Station #1 QR to unlock Question #1",
     };
   } else {
     const last = seq.entries.find((e) => e.position === completed);
@@ -657,10 +866,15 @@ export async function getTeamState(teamIdStr: string) {
       ? { kind: "FINISHED", title: "Vault opened", text: q?.clueText || "You have completed THE HEIST.", lastAction: "FINISH", hint: { used: false, text: null } }
       : {
           kind: "CLUE",
-          title: `Mission ${completed + 1} of ${total}`,
+          title: `Station ${completed} Question — Active Intel`,
           text: q?.clueText ?? "",
           lastAction: (q?.actionType as ActionType) ?? null,
           hint: { used: Boolean(currentHint), text: currentHint },
+          isStaged: false,
+          stationNumber: completed,
+          nextStationNumber: completed + 1,
+          pendingPoints: 0,
+          statusLabel: `Scan Station #${completed + 1} QR to continue!`,
         };
   }
 
@@ -679,8 +893,18 @@ export async function getTeamState(teamIdStr: string) {
       completed,
       total,
       remaining: Math.max(0, total - completed),
-      currentMission: finished ? total : Math.min(completed + 1, total),
+      currentMission: finished
+        ? total
+        : team.stagedCheckpoint
+          ? team.stagedCheckpoint.position
+          : Math.min(completed + 1, total),
       finished,
+      activeStation: team.stagedCheckpoint ? team.stagedCheckpoint.position : completed,
+      nextStation: finished
+        ? total
+        : team.stagedCheckpoint
+          ? team.stagedCheckpoint.position + 1
+          : Math.min(completed + 1, total),
     },
     mission,
     inventory: {
@@ -736,18 +960,28 @@ export async function getScanResult(teamIdStr: string, scanId: string) {
     const pu = qr.actionType === "MAGNET"
       ? await PowerUpActivation.findOne({ team: teamIdStr, qr: qr._id }).sort({ createdAt: -1 }).lean()
       : null;
+    const isVault = ev.position === total;
+    const msg = isVault
+      ? "VAULT OPENED! All stations verified and coins banked!"
+      : ev.pointsAwarded > 0
+        ? `Station #${ev.position} Verified! +${ev.pointsAwarded} coins awarded for Station #${ev.position - 1}. Question #${ev.position} is now active in INTEL!`
+        : `Station #${ev.position} Checked In! Question #${ev.position} is now active in INTEL.`;
     return {
       ...base,
-      message: ev.position === total ? "VAULT OPENED!" : "Checkpoint secured!",
+      message: msg,
       powerUp: pu ? { id: String(pu._id), type: "MAGNET" as const, status: pu.status } : null,
       checkpoint: {
         position: ev.position,
         total,
         actionType: qr.actionType as ActionType,
-        isFinal: ev.position === total,
+        isFinal: isVault,
         clueText: qr.clueText,
         pointsAwarded: ev.pointsAwarded,
-        rewardText: rewardText(qr.actionType as ActionType, ev.pointsAwarded, rules, settings.scoringEnabled),
+        rewardText: isVault
+          ? rewardText(qr.actionType as ActionType, ev.pointsAwarded, rules, settings.scoringEnabled)
+          : ev.pointsAwarded > 0
+            ? `+${ev.pointsAwarded} coins awarded for Station #${ev.position - 1}!`
+            : `Points will be awarded when Station #${ev.position + 1} is verified!`,
       },
     };
   }

@@ -109,7 +109,7 @@ export const TX_LABELS: Record<TxType, string> = {
 
 /** Neutral message for any QR that is not the team's next valid checkpoint. */
 export const NEUTRAL_REJECT_MESSAGE =
-  "No active mission data found for this scan. Follow your verified clue and try again.";
+  "WRONG QR! This QR code is not valid for your team or not the correct station.";
 
 export const MAGNET_TARGET_MESSAGE =
   "Another team used a MAGNET against your team and transferred points. Check your updated score.";

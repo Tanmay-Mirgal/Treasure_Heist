@@ -386,7 +386,7 @@ export async function rollbackProgress(actor: AdminActor, id: string, toPosition
     const updated = await Team.findOneAndUpdate(
       { _id: team._id, currentPosition: team.currentPosition },
       {
-        $set: { currentPosition: toPosition, finishedAt: null, awaitingAnswer: null, lastProgressAt: now, ...(reversal ? { scoreChangedAt: now } : {}) },
+        $set: { currentPosition: toPosition, stagedCheckpoint: null, finishedAt: null, awaitingAnswer: null, lastProgressAt: now, ...(reversal ? { scoreChangedAt: now } : {}) },
         $inc: { score: -reversal, "hints.available": -hintsToRemove },
       },
       { session, returnDocument: "after" },
@@ -533,6 +533,7 @@ export async function clearTeamGameData(teamIds: Types.ObjectId[] | "ALL", initi
     $set: {
       score: 0,
       currentPosition: 0,
+      stagedCheckpoint: null,
       awaitingAnswer: null,
       hints: { available: initialHints, used: 0 },
       gameStartedAt: null,

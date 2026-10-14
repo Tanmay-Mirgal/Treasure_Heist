@@ -8,7 +8,7 @@ import type { ActionType, EventStatus } from "@/lib/game/types";
 
 export type TeamState = {
   team: { id: string; name: string; username: string; number: number; status: string; score: number; gameStartedAt: string | null; finishedAt: string | null };
-  progress: { completed: number; total: number; remaining: number; currentMission: number; finished: boolean };
+  progress: { completed: number; total: number; remaining: number; currentMission: number; finished: boolean; activeStation?: number; nextStation?: number };
   mission: {
     kind: "START" | "CLUE" | "ANSWER" | "FINISHED" | "UNCONFIGURED";
     title: string;
@@ -16,6 +16,11 @@ export type TeamState = {
     lastAction: ActionType | null;
     challengePrompt?: string;
     hint: { used: boolean; text: string | null };
+    isStaged?: boolean;
+    stationNumber?: number;
+    nextStationNumber?: number;
+    pendingPoints?: number;
+    statusLabel?: string;
   };
   inventory: {
     hintsAvailable: number;
