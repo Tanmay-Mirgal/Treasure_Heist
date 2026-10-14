@@ -847,17 +847,19 @@ export async function getTeamState(teamIdStr: string) {
       statusLabel: `UNSOLVED — Scan Station #${staged.position + 1} to verify and earn coins!`,
     };
   } else if (completed === 0) {
+    // No stations scanned yet — mission is intentionally blank.
+    // The team must scan Station #1 QR to receive their first clue/question.
     mission = {
       kind: "START",
-      title: "Mission 1 — Starting clue",
-      text: seq.startingClue?.riddle || "Your starting clue has not been configured. Contact the Event Desk.",
+      title: "Scan to Begin",
+      text: "Head to Station #1 and scan its QR code to receive your first mission intel.",
       lastAction: null,
-      hint: { used: Boolean(currentHint), text: currentHint },
+      hint: { used: false, text: null },
       isStaged: false,
       stationNumber: 1,
       nextStationNumber: 1,
       pendingPoints: 0,
-      statusLabel: "Find and scan Station #1 QR to unlock Question #1",
+      statusLabel: "Scan Station #1 QR to unlock your first riddle!",
     };
   } else {
     const last = seq.entries.find((e) => e.position === completed);

@@ -117,18 +117,18 @@ export function MissionClient() {
       )}
 
       {mission.kind === "START" && (
-        <div className="relative overflow-hidden rounded-3xl border-2 border-cyan-400/80 bg-gradient-to-r from-cyan-500/20 via-slate-900 to-cyan-500/10 p-4 shadow-[0_0_25px_rgba(6,182,212,0.3)] backdrop-blur-xl">
+        <div className="relative overflow-hidden rounded-3xl border-2 border-yellow-400/80 bg-gradient-to-r from-yellow-500/20 via-slate-900 to-amber-500/10 p-4 shadow-[0_0_25px_rgba(250,204,21,0.3)] backdrop-blur-xl">
           <div className="absolute inset-x-0 top-0 h-1 subway-hazard" />
           <div className="flex items-center justify-between gap-2">
-            <span className="font-heading text-xs font-black uppercase tracking-wider text-cyan-300">
-              ★ STARTING INTEL CLUE ★
+            <span className="font-heading text-xs font-black uppercase tracking-wider text-yellow-300">
+              ⚡ MISSION BRIEFING
             </span>
-            <span className="rounded-full border border-cyan-400/60 bg-cyan-400/20 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-cyan-300">
-              STEP 1 OF {progress.total}
+            <span className="rounded-full border border-yellow-400/60 bg-yellow-400/20 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-yellow-300">
+              AWAITING SCAN
             </span>
           </div>
           <p className="mt-1 text-xs font-bold text-slate-300">
-            Decipher this starting clue to locate Station #1. Scan Station #1 QR to unlock your first question!
+            Your mission intel is locked. Locate and scan <span className="text-yellow-300 font-black">Station #1 QR code</span> to receive your first riddle!
           </p>
         </div>
       )}
@@ -175,7 +175,8 @@ export function MissionClient() {
         </form>
       )}
 
-      {(mission.kind === "START" || mission.kind === "CLUE") && (
+      {/* Hint section — only show once a clue is actually active (not on empty START) */}
+      {(mission.kind === "CLUE") && (
         <section className="relative overflow-hidden rounded-3xl border-2 border-amber-400/50 bg-gradient-to-b from-slate-900/95 via-slate-900/85 to-slate-950 p-5 shadow-xl backdrop-blur-xl" aria-labelledby="hint-h">
           <div className="flex items-center justify-between gap-3">
             <h2 id="hint-h" className="flex items-center gap-2 font-heading text-sm font-black uppercase tracking-wider text-amber-300">

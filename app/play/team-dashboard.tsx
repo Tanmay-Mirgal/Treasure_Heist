@@ -101,7 +101,7 @@ export function TeamDashboard() {
             : mission.kind === "ANSWER"
               ? "Station challenge unlocked — crack the passkey."
               : mission.kind === "START"
-                ? "Read your starting station clue and hit the tracks."
+                ? "Scan Station #1 QR code to receive your first mission intel."
                 : mission.kind === "UNCONFIGURED"
                   ? "Awaiting railway schedule from control room."
                   : "Follow active route clues to the next railway station."}
@@ -133,11 +133,11 @@ export function TeamDashboard() {
               </Link>
 
               <Link
-                href="/play/mission"
+                href={mission.kind === "START" ? "/play/scan" : "/play/mission"}
                 className="subway-btn-cyan h-14 rounded-2xl flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-4 font-heading text-xs sm:text-base font-black tracking-wider uppercase text-center"
               >
                 <Map className="size-4.5 sm:size-5 stroke-[2.5] shrink-0" />
-                <span className="truncate">{mission.kind === "ANSWER" ? "ENTER CODE" : "READ INTEL"}</span>
+                <span className="truncate">{mission.kind === "ANSWER" ? "ENTER CODE" : mission.kind === "START" ? "SCAN QR #1 🛹" : "READ INTEL"}</span>
               </Link>
             </>
           )}
