@@ -42,3 +42,12 @@ next-env.d.ts
 
 # allow the documented template
 !.env.example
+
+# The event workbook contains private routes and answers — keep it out of git.
+/data/import/*.xlsx
+/data/import/*.json
+
+# test artifacts
+/test-results/
+/playwright-report/
+/playwright/.cache/
