@@ -91,9 +91,9 @@ export function SequencesClient() {
       />
 
       <div className="flex flex-wrap items-center gap-2 text-sm">
-        <Badge className="bg-secondary">version {seq.version ?? "—"}</Badge>
-        <Badge className="bg-secondary">last change: {seq.updatedBy ?? "—"}</Badge>
-        <Badge className="bg-secondary">progress {seq.currentPosition}/{seq.entries.length}</Badge>
+        <Badge variant="secondary">version {seq.version ?? "—"}</Badge>
+        <Badge variant="secondary">last change: {seq.updatedBy ?? "—"}</Badge>
+        <Badge variant="secondary">progress {seq.currentPosition}/{seq.entries.length}</Badge>
         <span className="text-xs text-muted-foreground">Workbook order: {seq.sourceOrder.join(" → ") || "—"}</span>
       </div>
 

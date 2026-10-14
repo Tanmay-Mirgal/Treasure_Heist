@@ -53,7 +53,7 @@ export function TeamsClient() {
         actions={
           <>
             <Button asChild variant="outline">
-              <a href="/api/admin/teams/export">
+              <a href="/api/admin/teams/export" download>
                 <Download className="size-4" /> Export CSV
               </a>
             </Button>
