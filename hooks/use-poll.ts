@@ -78,13 +78,14 @@ export function useOnline() {
  * re-anchored on every poll, so refreshes never reset the timer.
  */
 export function useServerCountdown(remainingMs: number | null, receivedAt: number | null, running: boolean) {
-  const [now, setNow] = useState(() => Date.now());
+  const [now, setNow] = useState<number | null>(null);
   useEffect(() => {
+    setNow(Date.now());
     if (!running) return;
     const id = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(id);
   }, [running]);
-  if (remainingMs === null || receivedAt === null || !running) return remainingMs;
+  if (remainingMs === null || receivedAt === null || !running || now === null) return remainingMs;
   return Math.max(0, remainingMs - Math.max(0, now - receivedAt));
 }
 

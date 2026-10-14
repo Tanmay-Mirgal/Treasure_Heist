@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { Home, Map, ScanLine, Trophy, Wallet, WifiOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useOnline } from "@/hooks/use-poll";
@@ -120,7 +120,9 @@ export function TeamShell({ children }: { children: ReactNode }) {
     <TeamStateProvider>
       <TopBar />
       <main className="mx-auto w-full max-w-lg flex-1 px-4 pb-28 pt-4">{children}</main>
-      <BottomNav />
+      <Suspense fallback={null}>
+        <BottomNav />
+      </Suspense>
     </TeamStateProvider>
   );
 }

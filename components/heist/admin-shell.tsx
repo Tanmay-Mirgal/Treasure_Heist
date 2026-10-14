@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState, type ReactNode } from "react";
+import { Suspense, useEffect, useState, type ReactNode } from "react";
 import {
   Activity,
   ClipboardCheck,
@@ -94,7 +94,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
         <Wordmark />
         <p className="mt-1 pl-12 text-[10px] font-semibold uppercase tracking-[0.3em] text-warn">Control room</p>
         <div className="mt-6 flex-1 overflow-y-auto">
-          <NavList />
+          <Suspense fallback={<div className="h-64" aria-hidden />}>
+            <NavList />
+          </Suspense>
         </div>
         <LogoutButton role="admin" className="mt-4 w-full" />
       </aside>
@@ -113,7 +115,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
                 </SheetTitle>
               </SheetHeader>
               <div className="mt-4">
-                <NavList onNavigate={() => setOpen(false)} />
+                <Suspense fallback={null}>
+                  <NavList onNavigate={() => setOpen(false)} />
+                </Suspense>
               </div>
               <LogoutButton role="admin" className="mt-6 w-full" />
             </SheetContent>
@@ -121,7 +125,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
           <span className="font-heading text-sm font-semibold tracking-[0.2em]">CONTROL ROOM</span>
         </header>
         <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 lg:px-8">
-          <PasswordBanner />
+          <Suspense fallback={null}>
+            <PasswordBanner />
+          </Suspense>
           {children}
         </main>
       </div>

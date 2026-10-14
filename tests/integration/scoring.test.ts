@@ -63,7 +63,7 @@ describe("point rules", () => {
     expect(r.body.data.checkpoint.pointsAwarded).toBe(2);
     expect(r.body.data.hintsGranted).toBe(1);
     expect(await score()).toBe(5);
-    expect((await Team.findOne({ teamNumber: 1 }).lean())!.hints.available).toBe(1);
+    expect((await Team.findOne({ teamNumber: 1 }).lean())!.hints?.available).toBe(1);
   });
 
   it("full route total = 1 + 0 + 2 + 2 + 1 + 1 and the ledger equals the score", async () => {
@@ -136,7 +136,7 @@ describe("configurable rules", () => {
     const admin = await loginAdmin();
     await call(patchSettings, { cookie: admin, method: "PATCH", body: { rules: { superShoes: { mode: "SCORE_ONLY" } }, reason: "no hints" } });
     for (let p = 1; p <= 4; p++) await doScan(t1, await codeAt(1, p));
-    expect((await Team.findOne({ teamNumber: 1 }).lean())!.hints.available).toBe(0);
+    expect((await Team.findOne({ teamNumber: 1 }).lean())!.hints?.available).toBe(0);
     await call(patchSettings, { cookie: admin, method: "PATCH", body: { rules: { superShoes: { mode: "HINT" } }, reason: "restore" } });
   });
 
@@ -255,7 +255,7 @@ describe("organizer corrections", () => {
     expect(r.body.data).toMatchObject({ currentPosition: 1, score: 1, voided: 3, pointsReversed: 4 });
     expect(await PowerUpActivation.countDocuments({ status: "VOID" })).toBe(1);
     const team = await Team.findOne({ teamNumber: 1 }).lean();
-    expect(team!.hints.available).toBe(0);
+    expect(team!.hints?.available).toBe(0);
     // ledger still balances, and the team can re-scan checkpoint 2 normally
     const ledger = (await ScoreTransaction.aggregate([{ $group: { _id: null, s: { $sum: "$delta" } } }]))[0].s;
     expect(ledger).toBe(team!.score);
