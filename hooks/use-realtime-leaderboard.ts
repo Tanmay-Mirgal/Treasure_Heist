@@ -4,12 +4,23 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import type { LeaderboardRow } from "@/lib/services/leaderboard";
 import { api } from "@/lib/client/api";
 
+export type TimerState = {
+  enabled: boolean;
+  durationMs: number | null;
+  remainingMs: number | null;
+  elapsedMs: number;
+  running: boolean;
+  expired: boolean;
+  serverNow: string;
+};
+
 export type BoardData = {
   frozen: boolean;
   frozenAt: string | null;
   rows: LeaderboardRow[];
   eventStatus: string;
   testMode: boolean;
+  timer: TimerState;
 };
 
 /**

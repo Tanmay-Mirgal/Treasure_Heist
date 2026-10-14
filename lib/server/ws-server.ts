@@ -2,7 +2,7 @@ import http from "node:http";
 import { WebSocketServer, WebSocket } from "ws";
 import { getLeaderboard, getScoreSummary } from "../services/leaderboard";
 import { ready } from "../services/bootstrap";
-import { Team } from "../models";
+import { getSettings, timerOf } from "../services/settings";
 
 // Global in-memory subscriber registries
 const leaderboardClients = new Set<WebSocket>();
@@ -10,6 +10,7 @@ const teamClients = new Map<string, Set<WebSocket>>();
 
 let serverInstance: http.Server | null = null;
 let wssInstance: WebSocketServer | null = null;
+let timerTickInterval: NodeJS.Timeout | null = null;
 
 function safeSend(ws: WebSocket, data: unknown) {
   if (ws.readyState === WebSocket.OPEN) {
@@ -55,6 +56,38 @@ export async function broadcastTeam(teamId: string) {
   } catch (err) {
     console.error(`[WS] broadcastTeam error (${teamId}):`, err);
   }
+}
+
+/**
+ * Start a periodic timer-tick loop that keeps leaderboard clients updated
+ * with live timer data while the event timer is running.
+ * Ticks every 5s normally; accelerates to 1s when <2 min remain.
+ */
+function startTimerTicker() {
+  if (timerTickInterval) return;
+  let currentInterval = 5000;
+
+  async function tick() {
+    if (leaderboardClients.size === 0) return;
+    try {
+      const settings = await getSettings();
+      const t = timerOf(settings);
+      if (!t.enabled || !t.running) return; // no active timer — skip
+      void broadcastLeaderboard();
+      // Speed up when nearly expired
+      const nextInterval = t.remainingMs !== null && t.remainingMs < 2 * 60_000 ? 1000 : 5000;
+      if (nextInterval !== currentInterval) {
+        currentInterval = nextInterval;
+        if (timerTickInterval) clearInterval(timerTickInterval);
+        timerTickInterval = setInterval(() => void tick(), currentInterval);
+      }
+    } catch {
+      // Silently ignore errors in background ticker
+    }
+  }
+
+  timerTickInterval = setInterval(() => void tick(), currentInterval);
+  console.log("[WS] Timer ticker started (5s base, 1s when <2 min remain)");
 }
 
 /**
@@ -197,6 +230,8 @@ export function startWebSocketServer(port: number = Number(process.env.WS_PORT) 
 
   server.listen(port, () => {
     console.log(`⚡ [WS] Real-time Subway Heist WebSocket server listening on port ${port}`);
+    // Start timer ticker once the server is up
+    startTimerTicker();
   });
 
   serverInstance = server;

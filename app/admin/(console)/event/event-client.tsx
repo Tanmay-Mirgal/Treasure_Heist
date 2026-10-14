@@ -101,7 +101,46 @@ export function EventClient() {
         <StatTile label="Started" value={formatDateTime(s.startedAt)} className="[&_.hud-number]:text-base" />
         <StatTile label="Ended" value={formatDateTime(s.endedAt)} className="[&_.hud-number]:text-base" />
         <StatTile label="Elapsed (excl. pauses)" value={formatDuration(s.timerState.elapsedMs)} tone="signal" />
-        <StatTile label="Remaining" value={s.timer.enabled ? formatDuration(remaining) : "no timer"} tone={s.timerState.expired ? "danger" : "gold"} />
+        {/* Remaining countdown — animated when running */}
+        {s.timer.enabled ? (() => {
+          const expired = s.timerState.expired || (remaining !== null && remaining <= 0);
+          const lowTime = !expired && remaining !== null && remaining < 5 * 60_000;
+          return (
+            <div
+              className={`relative overflow-hidden rounded-xl border-2 p-3 flex flex-col gap-1 shadow-xl ${
+                expired
+                  ? "border-amber-400 bg-amber-500/20 shadow-[0_0_20px_rgba(245,158,11,0.4)]"
+                  : lowTime
+                    ? "border-red-500 bg-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.4)] animate-pulse"
+                    : s.timerState.running
+                      ? "border-emerald-500/60 bg-emerald-500/10"
+                      : "border-border bg-secondary/40"
+              }`}
+            >
+              <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest">
+                {s.timerState.running && !expired && (
+                  <span className={`size-1.5 rounded-full ${lowTime ? "bg-red-400 animate-ping" : "bg-emerald-400 animate-ping"}`} />
+                )}
+                <span className={expired ? "text-amber-400" : lowTime ? "text-red-400" : "text-muted-foreground"}>
+                  {expired ? "★ TIME EXPIRED ★" : "Remaining"}
+                </span>
+              </div>
+              <div
+                className={`hud-number font-heading text-2xl font-black leading-none ${
+                  expired
+                    ? "text-amber-300 drop-shadow-[0_0_12px_rgba(245,158,11,0.8)]"
+                    : lowTime
+                      ? "text-red-300 drop-shadow-[0_0_12px_rgba(239,68,68,0.8)]"
+                      : "text-foreground"
+                }`}
+              >
+                {expired ? "TIME'S UP" : formatDuration(remaining)}
+              </div>
+            </div>
+          );
+        })() : (
+          <StatTile label="Remaining" value="no timer" tone="gold" />
+        )}
       </div>
 
       {s.status === "SETUP" && !s.testMode && (

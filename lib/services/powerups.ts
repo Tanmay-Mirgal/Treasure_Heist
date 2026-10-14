@@ -28,7 +28,7 @@ export async function magnetTargets(teamIdStr: string) {
     id: String(t._id),
     name: t.displayName,
     number: t.teamNumber,
-    score: t.score,
+    // score is intentionally omitted — opponents must not see each other's points
     transferable: magnetTransferAmount(t.score, max),
   }));
 }

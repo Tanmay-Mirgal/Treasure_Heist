@@ -2,7 +2,7 @@ import { Notification, PowerUpActivation, ScoreTransaction, Team, TeamSequence, 
 import { rankTeams } from "../game/rules";
 import { TX_LABELS, type TxType } from "../game/types";
 import { ready } from "./bootstrap";
-import { getSettings, rulesOf } from "./settings";
+import { getSettings, rulesOf, timerOf } from "./settings";
 import { Types } from "mongoose";
 
 export type LeaderboardRow = {
@@ -96,6 +96,17 @@ export async function computeLeaderboard(): Promise<LeaderboardRow[]> {
 
 export async function getLeaderboard() {
   const settings = await getSettings();
+  const now = new Date();
+  const t = timerOf(settings, now);
+  const timer = {
+    enabled: t.enabled,
+    durationMs: t.durationMs,
+    remainingMs: t.remainingMs,
+    elapsedMs: t.elapsedMs,
+    running: t.running,
+    expired: t.expired,
+    serverNow: now.toISOString(),
+  };
   if (settings.leaderboardFrozen && settings.frozenSnapshot) {
     return {
       frozen: true,
@@ -103,9 +114,17 @@ export async function getLeaderboard() {
       rows: settings.frozenSnapshot as LeaderboardRow[],
       eventStatus: settings.status,
       testMode: settings.testMode,
+      timer,
     };
   }
-  return { frozen: false, frozenAt: null, rows: await computeLeaderboard(), eventStatus: settings.status, testMode: settings.testMode };
+  return {
+    frozen: false,
+    frozenAt: null,
+    rows: await computeLeaderboard(),
+    eventStatus: settings.status,
+    testMode: settings.testMode,
+    timer,
+  };
 }
 
 /* ------------------------------------------------------------------ */

@@ -144,17 +144,68 @@ export function TeamDashboard() {
         </div>
       </section>
 
-      {/* Mission Clock / Countdown */}
-      {event.timer.enabled && (
-        <div className="flex items-center justify-between gap-2 rounded-2xl border-2 border-slate-700 bg-gradient-to-r from-slate-900/90 to-slate-950 px-3.5 sm:px-4 py-3 shadow-md backdrop-blur-md">
-          <span className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-400">
-            <Timer className="size-4 text-cyan-400 shrink-0" /> {event.status === "SETUP" ? "Subway Clock" : "Time to Vault Close"}
-          </span>
-          <span className={`hud-number font-heading text-xl sm:text-2xl font-black ${remaining !== null && remaining < 5 * 60_000 ? "text-red-400 animate-pulse drop-shadow-[0_0_10px_rgba(248,113,113,0.8)]" : "text-cyan-300 drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]"}`}>
-            {event.status === "SETUP" ? formatDuration(event.timer.durationMs) : formatDuration(remaining)}
-          </span>
-        </div>
-      )}
+      {/* Mission Clock / Countdown — full HUD card */}
+      {event.timer.enabled && (() => {
+        const expired = remaining !== null && remaining <= 0;
+        const lowTime = !expired && remaining !== null && remaining < 5 * 60_000;
+        const isSetup = event.status === "SETUP";
+        return (
+          <div
+            className={`relative overflow-hidden rounded-2xl border-2 p-4 shadow-2xl backdrop-blur-xl ${
+              expired
+                ? "border-amber-400 bg-gradient-to-r from-amber-500/20 via-slate-900 to-amber-500/10 shadow-[0_0_40px_rgba(245,158,11,0.5)]"
+                : lowTime
+                  ? "border-red-500 bg-gradient-to-r from-red-500/20 via-slate-900 to-red-500/10 shadow-[0_0_40px_rgba(239,68,68,0.5)] animate-pulse"
+                  : "border-cyan-400/50 bg-gradient-to-r from-cyan-500/10 via-slate-900 to-slate-950 shadow-[0_0_25px_rgba(34,211,238,0.2)]"
+            }`}
+          >
+            <div className="absolute inset-x-0 top-0 h-1 subway-hazard opacity-70" />
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div
+                  className={`grid size-11 shrink-0 place-items-center rounded-xl border-2 ${
+                    expired
+                      ? "border-amber-400 bg-amber-500/30 text-amber-300"
+                      : lowTime
+                        ? "border-red-500 bg-red-500/30 text-red-300"
+                        : "border-cyan-400/60 bg-cyan-500/20 text-cyan-300"
+                  }`}
+                >
+                  <Timer className={`size-5 ${lowTime ? "animate-bounce" : ""}`} />
+                </div>
+                <div>
+                  <div
+                    className={`text-[9px] font-black uppercase tracking-widest ${
+                      expired ? "text-amber-400" : lowTime ? "text-red-400" : "text-cyan-400"
+                    }`}
+                  >
+                    {expired ? "★ VAULT CLOSED ★" : lowTime ? "⚠ TIME RUNNING OUT!" : "⏱ TIME TO VAULT CLOSE"}
+                  </div>
+                  <div
+                    className={`hud-number font-heading text-3xl font-black leading-none mt-0.5 ${
+                      expired
+                        ? "text-amber-300 drop-shadow-[0_0_15px_rgba(245,158,11,0.9)]"
+                        : lowTime
+                          ? "text-red-300 drop-shadow-[0_0_15px_rgba(239,68,68,0.9)]"
+                          : "text-cyan-200 drop-shadow-[0_0_12px_rgba(34,211,238,0.6)]"
+                    }`}
+                  >
+                    {expired
+                      ? "TIME'S UP!"
+                      : isSetup
+                        ? formatDuration(event.timer.durationMs)
+                        : formatDuration(remaining)}
+                  </div>
+                </div>
+              </div>
+              <div className="text-right shrink-0">
+                <div className="text-[9px] font-black uppercase tracking-widest text-slate-500">TOTAL</div>
+                <div className="font-heading text-sm font-black text-slate-400">{formatDuration(event.timer.durationMs)}</div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Gamified HUD Stat Tiles */}
       <div className="grid grid-cols-2 gap-2 sm:gap-2.5">

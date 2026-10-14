@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Lock, RefreshCw, Trophy, Zap } from "lucide-react";
+import { ArrowLeft, Clock, Lock, RefreshCw, Timer, Trophy, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,7 @@ import { Wordmark } from "@/components/heist/brand";
 import { EmptyState, SignalDot, TrackDivider, formatTime } from "@/components/heist/bits";
 import { api } from "@/lib/client/api";
 import { useRealtimeLeaderboard } from "@/hooks/use-realtime-leaderboard";
+import { useServerCountdown, formatDuration } from "@/hooks/use-poll";
 import { cn } from "@/lib/utils";
 
 const STATUS: Record<string, { label: string; tone: "ok" | "signal" | "muted" | "danger" }> = {
@@ -22,6 +23,19 @@ const STATUS: Record<string, { label: string; tone: "ok" | "signal" | "muted" | 
 export function LeaderboardClient() {
   const { data, loading, refresh, lastLiveAt, wsConnected } = useRealtimeLeaderboard(12_000);
   const [back, setBack] = useState<{ href: string; label: string }>({ href: "/", label: "Home" });
+
+  // Server-anchored countdown: anchor to when we got the data from server
+  const t = data?.timer;
+  const serverReceivedAt = lastLiveAt ? lastLiveAt.getTime() : null;
+  const remaining = useServerCountdown(
+    t?.remainingMs ?? null,
+    serverReceivedAt,
+    Boolean(t?.running && t.enabled),
+  );
+
+  const isExpired = t?.expired || (remaining !== null && remaining <= 0 && t?.enabled);
+  const isRunning = t?.running && t?.enabled && !isExpired;
+  const isLowTime = remaining !== null && remaining > 0 && remaining < 5 * 60_000;
 
   useEffect(() => {
     api<{ team: unknown; admin: unknown }>("/api/auth/session")
@@ -79,6 +93,90 @@ export function LeaderboardClient() {
             </button>
           </div>
         </div>
+
+        {/* ─── Event Countdown Banner ─── */}
+        {t?.enabled && (
+          <div
+            className={cn(
+              "relative overflow-hidden rounded-2xl border-2 p-4 sm:p-5 flex items-center justify-between gap-3 shadow-2xl backdrop-blur-xl mt-4",
+              isExpired || data?.frozen
+                ? "border-amber-400 bg-gradient-to-r from-amber-500/20 via-slate-900 to-amber-500/10 shadow-[0_0_40px_rgba(245,158,11,0.5)]"
+                : isLowTime
+                  ? "border-red-500 bg-gradient-to-r from-red-500/20 via-slate-900 to-red-500/10 shadow-[0_0_40px_rgba(239,68,68,0.5)] animate-pulse"
+                  : "border-cyan-400/60 bg-gradient-to-r from-cyan-500/15 via-slate-900 to-slate-950 shadow-[0_0_30px_rgba(34,211,238,0.25)]",
+            )}
+          >
+            <div className="absolute inset-x-0 top-0 h-1 subway-hazard opacity-70" />
+            <div className="flex items-center gap-2.5 sm:gap-3">
+              <div
+                className={cn(
+                  "grid size-10 sm:size-12 shrink-0 place-items-center rounded-xl border-2",
+                  isExpired || data?.frozen
+                    ? "border-amber-400 bg-amber-500/30 text-amber-300"
+                    : isLowTime
+                      ? "border-red-500 bg-red-500/30 text-red-300 animate-pulse"
+                      : "border-cyan-400/60 bg-cyan-500/20 text-cyan-300",
+                )}
+              >
+                {isExpired || data?.frozen ? (
+                  <Lock className="size-5 sm:size-6" />
+                ) : (
+                  <Timer className={cn("size-5 sm:size-6", isLowTime && "animate-bounce")} />
+                )}
+              </div>
+              <div>
+                <div
+                  className={cn(
+                    "text-[9px] sm:text-[10px] font-black uppercase tracking-widest",
+                    isExpired || data?.frozen ? "text-amber-400" : isLowTime ? "text-red-400" : "text-cyan-400",
+                  )}
+                >
+                  {isExpired || data?.frozen
+                    ? "★ VAULT CLOSED — FINAL RESULTS ★"
+                    : isLowTime
+                      ? "⚠ TIME IS RUNNING OUT!"
+                      : "⏱ TIME REMAINING"}
+                </div>
+                <div
+                  className={cn(
+                    "font-heading font-black tracking-tight leading-none mt-0.5",
+                    "text-xl sm:text-2xl",
+                    isExpired || data?.frozen
+                      ? "text-amber-300 drop-shadow-[0_0_15px_rgba(245,158,11,0.8)]"
+                      : isLowTime
+                        ? "text-red-300 drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]"
+                        : "text-white",
+                  )}
+                >
+                  {isExpired || data?.frozen
+                    ? "SCORES LOCKED 🏆"
+                    : data?.eventStatus === "PAUSED"
+                      ? "EVENT PAUSED ⏸"
+                      : formatDuration(remaining)}
+                </div>
+              </div>
+            </div>
+            <div className="text-right shrink-0">
+              <div
+                className={cn(
+                  "text-[9px] sm:text-[10px] font-black uppercase tracking-widest",
+                  isExpired || data?.frozen ? "text-amber-400" : "text-slate-400",
+                )}
+              >
+                TOTAL DURATION
+              </div>
+              <div
+                className={cn(
+                  "font-heading text-sm sm:text-base font-black",
+                  isExpired || data?.frozen ? "text-amber-300" : "text-slate-300",
+                )}
+              >
+                {formatDuration(t.durationMs)}
+              </div>
+            </div>
+          </div>
+        )}
+
         <TrackDivider />
 
         {loading && !data ? (

@@ -21,7 +21,7 @@ import { useTeamState } from "@/components/heist/team-state";
 import { api, ApiClientError, newIdempotencyKey } from "@/lib/client/api";
 import { cn } from "@/lib/utils";
 
-type Target = { id: string; name: string; number: number; score: number; transferable: number };
+type Target = { id: string; name: string; number: number; transferable: number };
 type Result = { status: "USED" | "WASTED"; amount: number; targetName: string; score: number; replayed: boolean };
 
 export function MagnetClient() {
@@ -167,7 +167,6 @@ export function MagnetClient() {
                   <div className="truncate font-heading font-black text-white group-hover:text-orange-200 transition-colors text-sm sm:text-base">
                     {t.name}
                   </div>
-                  <div className="font-mono text-xs font-black text-yellow-300">{t.score} COINS</div>
                 </div>
                 <span
                   className={cn(
