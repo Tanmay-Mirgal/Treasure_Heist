@@ -49,23 +49,23 @@ export function ScanResultView({ result, onScanAgain }: { result: ScanResultData
       <div className={cn("relative overflow-hidden rounded-3xl p-6 backdrop-blur-xl transition-all", look.tone)}>
         <div className="absolute inset-x-0 top-0 h-1.5 subway-hazard" />
         
-        <div className="flex items-start gap-4 pt-1">
-          <div className="grid size-14 shrink-0 place-items-center rounded-2xl bg-black/50 border border-white/20 shadow-inner">
-            <look.icon className="size-8 stroke-[2.5]" aria-hidden />
+        <div className="flex items-start gap-3 sm:gap-4 pt-1">
+          <div className="grid size-12 sm:size-14 shrink-0 place-items-center rounded-2xl bg-black/50 border border-white/20 shadow-inner">
+            <look.icon className="size-6 sm:size-8 stroke-[2.5]" aria-hidden />
           </div>
           <div className="min-w-0 flex-1">
-            <h2 className="font-heading text-2xl font-black tracking-wide text-white">{look.title}</h2>
-            <p className="mt-1 text-sm font-bold leading-relaxed text-slate-200">{result.message}</p>
+            <h2 className="font-heading text-xl sm:text-2xl font-black tracking-wide text-white">{look.title}</h2>
+            <p className="mt-1 text-xs sm:text-sm font-bold leading-relaxed text-slate-200">{result.message}</p>
           </div>
         </div>
 
         {cp && result.outcome === "ACCEPTED" && (
-          <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t-2 border-white/10 pt-4">
-            <div className="flex items-center gap-2.5">
-              <span className="hud-number rounded-xl border border-yellow-300 bg-yellow-400 px-3 py-1 font-heading text-lg font-black text-slate-950 shadow-[0_2px_12px_rgba(250,204,21,0.6)]">
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-2.5 sm:gap-3 border-t-2 border-white/10 pt-4">
+            <div className="flex items-center gap-2">
+              <span className="hud-number rounded-xl border border-yellow-300 bg-yellow-400 px-2.5 sm:px-3 py-1 font-heading text-base sm:text-lg font-black text-slate-950 shadow-[0_2px_12px_rgba(250,204,21,0.6)]">
                 +{cp.pointsAwarded} COINS
               </span>
-              <span className="text-sm font-black text-white uppercase tracking-wider">{cp.rewardText}</span>
+              <span className="text-xs sm:text-sm font-black text-white uppercase tracking-wider">{cp.rewardText}</span>
             </div>
             <div className="flex items-center gap-2">
               {cp.actionType !== "NORMAL" && <ActionBadge action={cp.actionType} />}
@@ -103,17 +103,17 @@ export function ScanResultView({ result, onScanAgain }: { result: ScanResultData
         {magnetReady && (
           <Link
             href={`/play/magnet?id=${result.powerUp!.id}`}
-            className="subway-btn-orange h-14 rounded-2xl flex items-center justify-center gap-2 font-heading text-base font-black tracking-wider uppercase"
+            className="subway-btn-orange h-14 rounded-2xl flex items-center justify-center gap-2 px-3 font-heading text-sm sm:text-base font-black tracking-wider uppercase text-center"
           >
-            <Magnet className="size-6 mr-1" />
-            <span>FIRE COIN MAGNET POWER-UP NOW ⚡</span>
+            <Magnet className="size-5 sm:size-6 mr-1 shrink-0" />
+            <span className="truncate">FIRE COIN MAGNET POWER-UP NOW ⚡</span>
           </Link>
         )}
 
         {result.outcome === "AWAITING_ANSWER" && (
           <Link
             href="/play/mission"
-            className="subway-btn-cyan h-14 rounded-2xl flex items-center justify-center gap-2 font-heading text-base font-black tracking-wider uppercase"
+            className="subway-btn-cyan h-14 rounded-2xl flex items-center justify-center gap-2 px-3 font-heading text-sm sm:text-base font-black tracking-wider uppercase text-center"
           >
             <span>CRACK THE STATION PASSKEY →</span>
           </Link>
@@ -122,7 +122,7 @@ export function ScanResultView({ result, onScanAgain }: { result: ScanResultData
         {finished ? (
           <Link
             href="/play/complete"
-            className="subway-btn-gold h-14 rounded-2xl flex items-center justify-center gap-2 font-heading text-base font-black tracking-wider uppercase"
+            className="subway-btn-gold h-14 rounded-2xl flex items-center justify-center gap-2 px-3 font-heading text-sm sm:text-base font-black tracking-wider uppercase text-center"
           >
             <Flag className="size-5 mr-1" />
             <span>VIEW FINISH SCREEN 🏆</span>
@@ -131,22 +131,22 @@ export function ScanResultView({ result, onScanAgain }: { result: ScanResultData
           <div className="grid grid-cols-2 gap-3">
             {onScanAgain ? (
               <button
-                className="subway-btn-cyan h-13 rounded-2xl flex items-center justify-center gap-2 font-heading text-sm font-black uppercase tracking-wider"
+                className="subway-btn-cyan h-13 rounded-2xl flex items-center justify-center gap-1.5 sm:gap-2 px-2 font-heading text-xs sm:text-sm font-black uppercase tracking-wider"
                 onClick={onScanAgain}
               >
-                <ScanLine className="size-5 mr-1" /> Scan Again
+                <ScanLine className="size-4 sm:size-5 shrink-0" /> <span>Scan Again</span>
               </button>
             ) : (
               <Link
                 href="/play/scan"
-                className="subway-btn-cyan h-13 rounded-2xl flex items-center justify-center gap-2 font-heading text-sm font-black uppercase tracking-wider"
+                className="subway-btn-cyan h-13 rounded-2xl flex items-center justify-center gap-1.5 sm:gap-2 px-2 font-heading text-xs sm:text-sm font-black uppercase tracking-wider"
               >
-                <ScanLine className="size-5 mr-1" /> Scan QR
+                <ScanLine className="size-4 sm:size-5 shrink-0" /> <span>Scan QR</span>
               </Link>
             )}
             <Link
               href="/play/mission"
-              className="subway-btn-gold h-13 rounded-2xl flex items-center justify-center gap-2 font-heading text-sm font-black uppercase tracking-wider"
+              className="subway-btn-gold h-13 rounded-2xl flex items-center justify-center gap-1.5 sm:gap-2 px-2 font-heading text-xs sm:text-sm font-black uppercase tracking-wider"
             >
               <span>View Intel →</span>
             </Link>

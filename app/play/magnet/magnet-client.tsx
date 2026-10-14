@@ -157,19 +157,21 @@ export function MagnetClient() {
                 aria-checked={targetId === t.id}
                 onClick={() => setTargetId(t.id)}
                 className={cn(
-                  "group flex items-center justify-between rounded-2xl border-2 p-4 text-left transition-all duration-150 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50",
+                  "group flex items-center justify-between gap-2 rounded-2xl border-2 p-3 sm:p-4 text-left transition-all duration-150 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50",
                   targetId === t.id
                     ? "border-orange-400 bg-orange-500/25 shadow-[0_0_25px_rgba(251,146,60,0.4)] ring-2 ring-orange-400/40"
                     : "border-slate-800 bg-slate-900/90 hover:border-slate-700",
                 )}
               >
-                <div>
-                  <span className="font-heading font-black text-white group-hover:text-orange-200 transition-colors text-base">{t.name}</span>
-                  <span className="ml-2 font-mono text-xs font-black text-yellow-300">{t.score} COINS</span>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate font-heading font-black text-white group-hover:text-orange-200 transition-colors text-sm sm:text-base">
+                    {t.name}
+                  </div>
+                  <div className="font-mono text-xs font-black text-yellow-300">{t.score} COINS</div>
                 </div>
                 <span
                   className={cn(
-                    "rounded-xl px-3 py-1 text-xs font-black uppercase tracking-wider",
+                    "rounded-xl px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-black uppercase tracking-wider shrink-0",
                     t.transferable > 0
                       ? "bg-orange-500 text-slate-950 shadow-md"
                       : "bg-slate-800 text-slate-500",
@@ -187,12 +189,12 @@ export function MagnetClient() {
         disabled={!selected || Boolean(blocked) || busy}
         onClick={() => selected && setConfirm({ key: newIdempotencyKey(), target: selected })}
         className={cn(
-          "subway-btn-orange h-14 w-full rounded-2xl font-heading text-base font-black tracking-wider uppercase flex items-center justify-center gap-2",
+          "subway-btn-orange h-14 w-full rounded-2xl font-heading text-xs sm:text-base font-black tracking-wider uppercase flex items-center justify-center gap-2 px-3 text-center",
           (!selected || Boolean(blocked) || busy) && "opacity-50 cursor-not-allowed",
         )}
       >
-        <Magnet className="size-6 mr-1" />
-        <span>FIRE COIN MAGNET ON {selected?.name ?? "TARGET"} ⚡</span>
+        <Magnet className="size-5 sm:size-6 mr-1 shrink-0" />
+        <span className="truncate">FIRE COIN MAGNET ON {selected?.name ?? "TARGET"} ⚡</span>
       </button>
 
       <AlertDialog open={Boolean(confirm)} onOpenChange={(o) => !o && !busy && setConfirm(null)}>

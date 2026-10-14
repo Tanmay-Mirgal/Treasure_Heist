@@ -18,7 +18,7 @@ export default function TeamLoginPage() {
         </Link>
 
         {/* Turnstile Check-in Card */}
-        <div className="relative mt-8 overflow-hidden rounded-3xl border-2 border-slate-700 bg-gradient-to-b from-slate-900/95 via-slate-900/90 to-slate-950 p-6 shadow-2xl backdrop-blur-xl">
+        <div className="relative mt-8 overflow-hidden rounded-3xl border-2 border-slate-700 bg-gradient-to-b from-slate-900/95 via-slate-900/90 to-slate-950 p-5 sm:p-6 shadow-2xl backdrop-blur-xl">
           {/* Card Top Hazard Bar */}
           <div className="absolute inset-x-0 top-0 h-1.5 subway-hazard" />
 

@@ -108,13 +108,13 @@ export function LoginForm({ role }: { role: "team" | "admin" }) {
         type="submit"
         disabled={busy}
         className={cn(
-          "h-13 w-full rounded-2xl font-heading text-base font-black tracking-wider uppercase transition-all flex items-center justify-center gap-2",
+          "h-13 w-full rounded-2xl font-heading text-sm sm:text-base font-black tracking-wider uppercase transition-all flex items-center justify-center gap-2 px-3",
           role === "team" ? "subway-btn-gold" : "subway-btn-cyan",
           busy && "opacity-75 cursor-wait"
         )}
       >
-        {busy ? <Loader2 className="size-5 animate-spin" /> : <LogIn className="size-5 stroke-[2.5]" />}
-        {busy ? "CHECKING CREW TICKET…" : role === "team" ? "START SURFING 🛹" : "ENTER CONTROL ROOM"}
+        {busy ? <Loader2 className="size-5 animate-spin shrink-0" /> : <LogIn className="size-5 stroke-[2.5] shrink-0" />}
+        <span className="truncate">{busy ? "CHECKING CREW TICKET…" : role === "team" ? "START SURFING 🛹" : "ENTER CONTROL ROOM"}</span>
       </button>
     </form>
   );

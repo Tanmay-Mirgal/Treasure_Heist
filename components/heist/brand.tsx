@@ -24,18 +24,18 @@ export function HeistMark({ className }: { className?: string }) {
 
 export function Wordmark({ className, tagline = false }: { className?: string; tagline?: boolean }) {
   return (
-    <div className={cn("flex items-center gap-2.5 select-none", className)}>
-      <HeistMark className="drop-shadow-[0_4px_12px_rgba(245,158,11,0.4)]" />
+    <div className={cn("flex items-center gap-2 sm:gap-2.5 select-none shrink-0", className)}>
+      <HeistMark className="size-8.5 sm:size-10 drop-shadow-[0_4px_12px_rgba(245,158,11,0.4)]" />
       <div className="leading-tight">
-        <div className="flex items-center gap-1.5 font-heading text-lg font-black tracking-wider uppercase text-foreground">
+        <div className="flex items-center gap-1 font-heading text-base sm:text-lg font-black tracking-wider uppercase text-foreground">
           <span className="text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">SUBWAY</span>
           <span className="bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 bg-clip-text text-transparent drop-shadow-[0_2px_8px_rgba(245,158,11,0.6)]">
             HEIST
           </span>
         </div>
         {tagline && (
-          <div className="mt-0.5 flex items-center gap-1 text-[10px] font-black uppercase tracking-[0.2em] text-cyan-400">
-            <span>SURF THE CAMPUS TRACKS</span>
+          <div className="mt-0.5 flex items-center gap-1 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.18em] sm:tracking-[0.2em] text-cyan-400">
+            <span>SURF THE TRACKS</span>
           </div>
         )}
       </div>

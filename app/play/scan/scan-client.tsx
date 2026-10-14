@@ -38,17 +38,17 @@ export function ScanClient() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <div>
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-cyan-400">
             <span className="size-2 rounded-full bg-cyan-400 motion-safe:animate-ping" />
             TARGET ACQUISITION
           </div>
-          <h1 className="mt-0.5 font-heading text-2xl font-bold tracking-tight text-foreground">Scan Checkpoint</h1>
+          <h1 className="mt-0.5 font-heading text-xl sm:text-2xl font-black tracking-tight text-white">Scan Checkpoint</h1>
         </div>
         {state && !state.progress.finished && (
-          <div className="rounded-xl border border-cyan-400/30 bg-cyan-950/40 px-3 py-1 text-right backdrop-blur-md">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">TARGET</span>
-            <div className="font-heading text-sm font-black text-cyan-300">
+          <div className="rounded-xl border border-cyan-400/30 bg-cyan-950/40 px-2.5 sm:px-3 py-1 text-right backdrop-blur-md shrink-0">
+            <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-muted-foreground">TARGET</span>
+            <div className="font-heading text-xs sm:text-sm font-black text-cyan-300">
               #{state.progress.currentMission} <span className="text-[10px] font-medium text-muted-foreground">of {state.progress.total}</span>
             </div>
           </div>

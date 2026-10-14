@@ -99,13 +99,13 @@ export function CoinScore({ score, className }: { score: number; className?: str
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-2 rounded-full border-2 border-amber-300/60 bg-gradient-to-r from-amber-500/25 via-yellow-400/30 to-amber-500/25 px-3 py-1 shadow-[0_4px_14px_rgba(245,158,11,0.4)] backdrop-blur-md transition-all hover:scale-105 active:scale-95",
+        "inline-flex shrink-0 items-center gap-1.5 sm:gap-2 rounded-full border-2 border-amber-300/60 bg-gradient-to-r from-amber-500/25 via-yellow-400/30 to-amber-500/25 px-2.5 sm:px-3 py-1 shadow-[0_4px_14px_rgba(245,158,11,0.4)] backdrop-blur-md transition-all hover:scale-105 active:scale-95",
         className,
       )}
     >
-      <SubwayCoinIcon />
-      <span className="hud-number font-heading text-sm font-black tracking-tight text-amber-300 drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">{score}</span>
-      <span className="text-[10px] font-black uppercase tracking-wider text-amber-400">COINS</span>
+      <SubwayCoinIcon className="size-4 sm:size-5" />
+      <span className="hud-number font-heading text-xs sm:text-sm font-black tracking-tight text-amber-300 drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">{score}</span>
+      <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-amber-400">COINS</span>
       <span className="sr-only">points</span>
     </span>
   );

@@ -56,29 +56,29 @@ export function CompleteClient() {
           <Trophy className="size-14 stroke-[2.5] drop-shadow-md" aria-hidden />
         </div>
 
-        <p className="mt-4 font-heading text-xs font-black uppercase tracking-[0.35em] text-yellow-300">
+        <p className="mt-4 font-heading text-xs font-black uppercase tracking-[0.25em] sm:tracking-[0.35em] text-yellow-300">
           ★ NEW HIGH SCORE · RUN COMPLETE! ★
         </p>
-        <h1 className="mt-2 font-heading text-3xl font-black text-white">Vault Breached, {team.name}!</h1>
-        <p className="mt-1 text-sm font-bold text-slate-300">Report to the Event Desk to register your official victory standing.</p>
+        <h1 className="mt-2 font-heading text-2xl sm:text-3xl font-black text-white">Vault Breached, {team.name}!</h1>
+        <p className="mt-1 text-xs sm:text-sm font-bold text-slate-300">Report to the Event Desk to register your official victory standing.</p>
         
         <div className="mt-6 flex flex-col items-center justify-center">
-          <div className="hud-number font-heading text-6xl font-black text-amber-300 drop-shadow-[0_4px_20px_rgba(245,158,11,0.7)]">
+          <div className="hud-number font-heading text-5xl sm:text-6xl font-black text-amber-300 drop-shadow-[0_4px_20px_rgba(245,158,11,0.7)]">
             {team.score}
           </div>
           <div className="text-xs font-black uppercase tracking-widest text-amber-400">TOTAL COINS BAG</div>
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-2 text-left">
-        <StatTile label="Rank" value={rank ? `#${rank}` : "—"} tone="signal" hint={frozen ? "final rank" : "live standing"} />
-        <StatTile label="Finish Time" value={formatTime(team.finishedAt)} tone="ok" className="[&_.hud-number]:text-base" />
-        <StatTile label="Run Time" value={formatDuration(elapsed)} tone="gold" className="[&_.hud-number]:text-base" />
+      <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5 text-left">
+        <StatTile label="Rank" value={rank ? `#${rank}` : "—"} tone="signal" hint={frozen ? "final" : "live"} className="p-2 sm:p-4 [&_.hud-number]:text-sm sm:[&_.hud-number]:text-xl" />
+        <StatTile label="Finish" value={formatTime(team.finishedAt)} tone="ok" className="p-2 sm:p-4 [&_.hud-number]:text-[11px] sm:[&_.hud-number]:text-base" />
+        <StatTile label="Run Time" value={formatDuration(elapsed)} tone="gold" className="p-2 sm:p-4 [&_.hud-number]:text-[11px] sm:[&_.hud-number]:text-base" />
       </div>
 
       <Link
         href="/leaderboard"
-        className="subway-btn-gold h-14 w-full rounded-2xl flex items-center justify-center gap-2 font-heading text-base font-black tracking-wider uppercase"
+        className="subway-btn-gold h-14 w-full rounded-2xl flex items-center justify-center gap-2 px-3 font-heading text-sm sm:text-base font-black tracking-wider uppercase text-center"
       >
         <Trophy className="size-5 stroke-[2.5]" />
         <span>VIEW OFFICIAL LEADERBOARD 🏆</span>

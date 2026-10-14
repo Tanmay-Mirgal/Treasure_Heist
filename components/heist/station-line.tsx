@@ -10,21 +10,21 @@ export function StationLine({ completed, total, finished }: { completed: number;
   const progressPercent = total > 1 ? (Math.min(completed, total - 1) / (total - 1)) * 100 : 0;
 
   return (
-    <div className="relative py-3" role="img" aria-label={`${completed} of ${total} stations cleared`}>
+    <div className="relative pt-7 pb-3 px-1" role="img" aria-label={`${completed} of ${total} stations cleared`}>
       {/* Railroad Sleepers / Ties Pattern */}
-      <div className="absolute inset-x-2 top-1/2 h-5 -translate-y-1/2 opacity-40 bg-[repeating-linear-gradient(90deg,#94A3B8_0px,#94A3B8_3px,transparent_3px,transparent_14px)]" />
+      <div className="absolute inset-x-2 top-[calc(50%+14px)] h-5 -translate-y-1/2 opacity-40 bg-[repeating-linear-gradient(90deg,#94A3B8_0px,#94A3B8_3px,transparent_3px,transparent_14px)]" />
 
       {/* Two Steel Rail Bars (Subway Tracks) */}
-      <div className="absolute inset-x-2 top-[calc(50%-4px)] h-1 rounded-full bg-slate-700 shadow-inner" />
-      <div className="absolute inset-x-2 top-[calc(50%+4px)] h-1 rounded-full bg-slate-700 shadow-inner" />
+      <div className="absolute inset-x-2 top-[calc(50%+10px)] h-1 rounded-full bg-slate-700 shadow-inner" />
+      <div className="absolute inset-x-2 top-[calc(50%+18px)] h-1 rounded-full bg-slate-700 shadow-inner" />
 
       {/* Active Glowing Electric Subway Rail Progress */}
       <div
-        className="absolute left-2 top-[calc(50%-4px)] h-1 rounded-full bg-gradient-to-r from-cyan-400 via-emerald-400 to-amber-400 shadow-[0_0_10px_rgba(6,182,212,0.8)] transition-all duration-700 ease-out"
+        className="absolute left-2 top-[calc(50%+10px)] h-1 rounded-full bg-gradient-to-r from-cyan-400 via-emerald-400 to-amber-400 shadow-[0_0_10px_rgba(6,182,212,0.8)] transition-all duration-700 ease-out"
         style={{ width: `calc((100% - 1rem) * ${progressPercent / 100})` }}
       />
       <div
-        className="absolute left-2 top-[calc(50%+4px)] h-1 rounded-full bg-gradient-to-r from-cyan-400 via-emerald-400 to-amber-400 shadow-[0_0_10px_rgba(6,182,212,0.8)] transition-all duration-700 ease-out"
+        className="absolute left-2 top-[calc(50%+18px)] h-1 rounded-full bg-gradient-to-r from-cyan-400 via-emerald-400 to-amber-400 shadow-[0_0_10px_rgba(6,182,212,0.8)] transition-all duration-700 ease-out"
         style={{ width: `calc((100% - 1rem) * ${progressPercent / 100})` }}
       />
 

@@ -229,11 +229,12 @@ export function QrScanner({
         <li>• Only your team&apos;s next checkpoint will be accepted.</li>
       </ul>
 
-      <form onSubmit={submitManual} className="rounded-xl border bg-card/60 p-4">
-        <Label htmlFor="manual-code" className="flex items-center gap-2 text-sm">
-          <Keyboard className="size-4 text-signal" /> Manual entry
+      <form onSubmit={submitManual} className="relative overflow-hidden rounded-2xl border-2 border-slate-700 bg-slate-900/90 p-4 shadow-lg backdrop-blur-md">
+        <div className="absolute inset-x-0 top-0 h-1 subway-hazard opacity-70" />
+        <Label htmlFor="manual-code" className="flex items-center gap-2 text-xs sm:text-sm font-black text-cyan-300 uppercase tracking-wider">
+          <Keyboard className="size-4 text-cyan-400" /> Manual Code Entry
         </Label>
-        <p className="mt-1 text-xs text-muted-foreground">Type the 8-character code printed under the QR (e.g. K7QX-M4PZ).</p>
+        <p className="mt-1 text-xs font-semibold text-slate-400">Type the 8-character code printed under the station QR (e.g. K7QX-M4PZ).</p>
         <div className="mt-3 flex gap-2">
           <Input
             id="manual-code"
@@ -245,11 +246,15 @@ export function QrScanner({
             autoCorrect="off"
             spellCheck={false}
             maxLength={80}
-            className="h-11 font-mono text-base uppercase tracking-widest"
+            className="h-12 border-2 border-slate-700 bg-slate-950/80 font-mono text-base font-bold uppercase tracking-widest text-white flex-1"
           />
-          <Button type="submit" className="h-11" disabled={busy || disabled || !manual.trim()}>
-            {busy ? <Loader2 className="size-4 animate-spin" /> : "Submit"}
-          </Button>
+          <button
+            type="submit"
+            className="subway-btn-gold h-12 px-4 sm:px-6 rounded-xl font-heading text-sm font-black tracking-wider uppercase shrink-0 transition-all flex items-center justify-center gap-1.5"
+            disabled={busy || disabled || !manual.trim()}
+          >
+            {busy ? <Loader2 className="size-4 animate-spin" /> : "SUBMIT"}
+          </button>
         </div>
       </form>
     </div>

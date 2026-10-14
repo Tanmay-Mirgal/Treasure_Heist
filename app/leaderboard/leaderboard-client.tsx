@@ -112,7 +112,7 @@ export function LeaderboardClient() {
                 <li
                   key={r.teamId}
                   className={cn(
-                    "flex items-center gap-3.5 rounded-2xl border-2 p-3.5 backdrop-blur-md transition-all duration-150 hover:scale-[1.01] sm:gap-4 sm:p-4.5",
+                    "flex items-center gap-2.5 sm:gap-4 rounded-2xl border-2 p-3 sm:p-4.5 backdrop-blur-md transition-all duration-150 hover:scale-[1.01]",
                     isFirst && "border-amber-400 bg-gradient-to-r from-amber-500/25 via-slate-900 to-slate-900 shadow-[0_0_30px_rgba(245,158,11,0.35)]",
                     isSecond && "border-slate-300 bg-gradient-to-r from-slate-400/20 via-slate-900 to-slate-900 shadow-[0_0_20px_rgba(203,213,225,0.2)]",
                     isThird && "border-orange-500 bg-gradient-to-r from-orange-600/20 via-slate-900 to-slate-900 shadow-[0_0_20px_rgba(234,88,12,0.2)]",
@@ -122,10 +122,10 @@ export function LeaderboardClient() {
                 >
                   <span
                     className={cn(
-                      "hud-number grid size-11 shrink-0 place-items-center rounded-2xl font-heading text-base font-black shadow-lg",
-                      isFirst && "subway-btn-gold text-slate-950 text-lg",
-                      isSecond && "subway-btn-cyan text-slate-950 text-base",
-                      isThird && "subway-btn-orange text-white text-base",
+                      "hud-number grid size-8.5 sm:size-11 shrink-0 place-items-center rounded-xl sm:rounded-2xl font-heading text-xs sm:text-base font-black shadow-lg",
+                      isFirst && "subway-btn-gold text-slate-950 text-sm sm:text-lg",
+                      isSecond && "subway-btn-cyan text-slate-950 text-xs sm:text-base",
+                      isThird && "subway-btn-orange text-white text-xs sm:text-base",
                       !isFirst && !isSecond && !isThird && "bg-slate-800 text-slate-300 border border-slate-700",
                     )}
                     aria-label={`Rank ${r.rank}`}
@@ -134,33 +134,33 @@ export function LeaderboardClient() {
                   </span>
 
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="truncate font-heading text-base font-black tracking-tight text-white">{r.name}</span>
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                      <span className="truncate font-heading text-xs sm:text-base font-black tracking-tight text-white">{r.name}</span>
                       {r.isYou && (
-                        <Badge className="bg-cyan-500/30 text-cyan-300 border border-cyan-400/60 font-black uppercase text-[10px] tracking-wider">
-                          YOUR CREW 🛹
+                        <Badge className="bg-cyan-500/30 text-cyan-300 border border-cyan-400/60 font-black uppercase text-[8px] sm:text-[10px] tracking-wider px-1.5 py-0 shrink-0">
+                          YOU 🛹
                         </Badge>
                       )}
                     </div>
-                    <div className="mt-1.5 flex items-center gap-2 text-xs text-slate-400 font-bold">
-                      <span className="relative h-2.5 w-20 overflow-hidden rounded-full bg-slate-800 sm:w-36" aria-hidden>
+                    <div className="mt-1 flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-slate-400 font-bold">
+                      <span className="relative h-2 w-10 sm:w-36 overflow-hidden rounded-full bg-slate-800 shrink-0" aria-hidden>
                         <span className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-cyan-400 via-emerald-400 to-amber-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" style={{ width: `${pct}%` }} />
                       </span>
-                      <span className="hud-number font-black text-white">
+                      <span className="hud-number font-black text-white shrink-0">
                         {r.completed}/{r.total}
                       </span>
-                      <span className="hidden items-center gap-1 sm:inline-flex">
-                        <SignalDot tone={s.tone} className="size-1.5" /> {s.label}
+                      <span className="hidden xs:inline-flex items-center gap-1 truncate">
+                        <SignalDot tone={s.tone} className="size-1.5 shrink-0" /> {s.label}
                       </span>
                       {r.lastActivityAt && <span className="hidden md:inline text-slate-500">· {formatTime(r.lastActivityAt)}</span>}
                     </div>
                   </div>
 
                   <div className="text-right shrink-0">
-                    <div className="hud-number font-heading text-2xl font-black text-amber-300 drop-shadow-[0_2px_8px_rgba(245,158,11,0.6)]">
+                    <div className="hud-number font-heading text-lg sm:text-2xl font-black text-amber-300 drop-shadow-[0_2px_8px_rgba(245,158,11,0.6)]">
                       {r.score}
                     </div>
-                    <div className="text-[10px] font-black uppercase tracking-wider text-amber-400">COINS</div>
+                    <div className="text-[8px] sm:text-[10px] font-black uppercase tracking-wider text-amber-400">COINS</div>
                   </div>
                 </li>
               );

@@ -113,11 +113,11 @@ export function TeamDashboard() {
         </div>
 
         {/* Chunky 3D Arcade Action Buttons */}
-        <div className="mt-6 grid grid-cols-2 gap-3">
+        <div className="mt-6 grid grid-cols-2 gap-2.5 sm:gap-3">
           {progress.finished ? (
             <Link
               href="/play/complete"
-              className="col-span-2 subway-btn-gold h-14 rounded-2xl flex items-center justify-center gap-2 font-heading text-base font-black tracking-wider uppercase"
+              className="col-span-2 subway-btn-gold h-14 rounded-2xl flex items-center justify-center gap-2 px-3 font-heading text-sm sm:text-base font-black tracking-wider uppercase text-center"
             >
               <Flag className="size-5 stroke-[2.5]" />
               <span>VIEW VICTORY VAULT</span>
@@ -126,18 +126,18 @@ export function TeamDashboard() {
             <>
               <Link
                 href="/play/scan"
-                className="subway-btn-gold h-14 rounded-2xl flex items-center justify-center gap-2 font-heading text-base font-black tracking-wider uppercase"
+                className="subway-btn-gold h-14 rounded-2xl flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-4 font-heading text-xs sm:text-base font-black tracking-wider uppercase text-center"
               >
-                <ScanLine className="size-5 stroke-[3]" />
+                <ScanLine className="size-4.5 sm:size-5 stroke-[3] shrink-0" />
                 <span>SCAN QR 🛹</span>
               </Link>
 
               <Link
                 href="/play/mission"
-                className="subway-btn-cyan h-14 rounded-2xl flex items-center justify-center gap-2 font-heading text-base font-black tracking-wider uppercase"
+                className="subway-btn-cyan h-14 rounded-2xl flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-4 font-heading text-xs sm:text-base font-black tracking-wider uppercase text-center"
               >
-                <Map className="size-5 stroke-[2.5]" />
-                <span>{mission.kind === "ANSWER" ? "ENTER CODE" : "READ INTEL"}</span>
+                <Map className="size-4.5 sm:size-5 stroke-[2.5] shrink-0" />
+                <span className="truncate">{mission.kind === "ANSWER" ? "ENTER CODE" : "READ INTEL"}</span>
               </Link>
             </>
           )}
@@ -146,18 +146,18 @@ export function TeamDashboard() {
 
       {/* Mission Clock / Countdown */}
       {event.timer.enabled && (
-        <div className="flex items-center justify-between rounded-2xl border-2 border-slate-700 bg-gradient-to-r from-slate-900/90 to-slate-950 px-4 py-3 shadow-md backdrop-blur-md">
-          <span className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-400">
-            <Timer className="size-4 text-cyan-400" /> {event.status === "SETUP" ? "Subway Clock" : "Time to Vault Close"}
+        <div className="flex items-center justify-between gap-2 rounded-2xl border-2 border-slate-700 bg-gradient-to-r from-slate-900/90 to-slate-950 px-3.5 sm:px-4 py-3 shadow-md backdrop-blur-md">
+          <span className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-400">
+            <Timer className="size-4 text-cyan-400 shrink-0" /> {event.status === "SETUP" ? "Subway Clock" : "Time to Vault Close"}
           </span>
-          <span className={`hud-number font-heading text-2xl font-black ${remaining !== null && remaining < 5 * 60_000 ? "text-red-400 animate-pulse drop-shadow-[0_0_10px_rgba(248,113,113,0.8)]" : "text-cyan-300 drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]"}`}>
+          <span className={`hud-number font-heading text-xl sm:text-2xl font-black ${remaining !== null && remaining < 5 * 60_000 ? "text-red-400 animate-pulse drop-shadow-[0_0_10px_rgba(248,113,113,0.8)]" : "text-cyan-300 drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]"}`}>
             {event.status === "SETUP" ? formatDuration(event.timer.durationMs) : formatDuration(remaining)}
           </span>
         </div>
       )}
 
       {/* Gamified HUD Stat Tiles */}
-      <div className="grid grid-cols-2 gap-2.5">
+      <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
         <StatTile label="Coins Loot" value={team.score} tone="gold" icon={<Coins className="size-4" />} />
         <StatTile label="Stations Cleared" value={`${progress.completed}/${progress.total}`} tone="ok" icon={<CheckCheck className="size-4" />} hint={`${progress.remaining} to finish line`} />
         <StatTile label="Mystery Clues" value={inventory.hintsAvailable} tone="signal" icon={<Lightbulb className="size-4" />} hint={`${inventory.hintsUsed} deployed`} />
@@ -168,20 +168,20 @@ export function TeamDashboard() {
       {magnets.length > 0 && (
         <Link
           href={`/play/magnet?id=${magnets[0]!.id}`}
-          className="group relative flex items-center gap-4 overflow-hidden rounded-2xl border-2 border-orange-400 bg-gradient-to-r from-orange-500/25 via-amber-500/20 to-orange-500/15 p-4 shadow-[0_0_25px_rgba(251,146,60,0.4)] transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+          className="group relative flex items-center gap-2.5 sm:gap-4 overflow-hidden rounded-2xl border-2 border-orange-400 bg-gradient-to-r from-orange-500/25 via-amber-500/20 to-orange-500/15 p-3.5 sm:p-4 shadow-[0_0_25px_rgba(251,146,60,0.4)] transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
         >
           <div className="pointer-events-none absolute -right-4 -top-4 size-20 rounded-full bg-orange-500/30 blur-xl group-hover:scale-150 transition-transform" />
-          <div className="grid size-12 place-items-center rounded-xl bg-orange-500/30 border-2 border-orange-400 text-orange-300 shadow-[0_0_15px_rgba(251,146,60,0.6)]">
-            <Magnet className="size-6 group-hover:rotate-12 transition-transform" aria-hidden />
+          <div className="grid size-11 sm:size-12 shrink-0 place-items-center rounded-xl bg-orange-500/30 border-2 border-orange-400 text-orange-300 shadow-[0_0_15px_rgba(251,146,60,0.6)]">
+            <Magnet className="size-5 sm:size-6 group-hover:rotate-12 transition-transform" aria-hidden />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="font-heading font-black text-orange-300 tracking-wide">COIN MAGNET READY!</span>
-              <span className="rounded-full bg-orange-400/30 px-1.5 py-0.2 text-[9px] font-black uppercase text-orange-200 border border-orange-300">ACTIVE</span>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <span className="font-heading font-black text-orange-300 tracking-wide text-xs sm:text-sm truncate">COIN MAGNET READY!</span>
+              <span className="rounded-full bg-orange-400/30 px-1.5 py-0.2 text-[8px] sm:text-[9px] font-black uppercase text-orange-200 border border-orange-300 shrink-0">ACTIVE</span>
             </div>
-            <div className="text-xs text-slate-200 font-bold mt-0.5">Snatch up to {state.rules.magnet.maxTransfer} coins from rival crews!</div>
+            <div className="text-[11px] sm:text-xs text-slate-200 font-bold mt-0.5 line-clamp-1">Snatch up to {state.rules.magnet.maxTransfer} coins from rivals!</div>
           </div>
-          <span className="subway-btn-orange rounded-xl px-3.5 py-1.5 text-xs font-black uppercase tracking-wider">
+          <span className="subway-btn-orange rounded-xl px-2.5 sm:px-3.5 py-1.5 text-[11px] sm:text-xs font-black uppercase tracking-wider shrink-0">
             FIRE ⚡
           </span>
         </Link>
@@ -190,19 +190,19 @@ export function TeamDashboard() {
       <TrackDivider />
 
       {/* Quick Access Grid */}
-      <div className="grid grid-cols-2 gap-2.5">
-        <Button asChild variant="secondary" className="h-12 font-bold hover:scale-[1.02] active:scale-[0.98] transition-all border border-border/50">
-          <Link href="/play/score">
-            <Wallet className="size-4 text-amber-400 mr-1.5" /> Loot History
+      <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
+        <Button asChild variant="secondary" className="h-12 text-xs sm:text-sm font-bold hover:scale-[1.02] active:scale-[0.98] transition-all border border-border/50 px-2 sm:px-4">
+          <Link href="/play/score" className="truncate">
+            <Wallet className="size-3.5 sm:size-4 text-amber-400 mr-1 sm:mr-1.5 shrink-0" /> Loot History
           </Link>
         </Button>
-        <Button asChild variant="secondary" className="h-12 font-bold hover:scale-[1.02] active:scale-[0.98] transition-all border border-border/50">
-          <Link href="/leaderboard">
-            <Trophy className="size-4 text-amber-400 mr-1.5" /> Live Board
+        <Button asChild variant="secondary" className="h-12 text-xs sm:text-sm font-bold hover:scale-[1.02] active:scale-[0.98] transition-all border border-border/50 px-2 sm:px-4">
+          <Link href="/leaderboard" className="truncate">
+            <Trophy className="size-3.5 sm:size-4 text-amber-400 mr-1 sm:mr-1.5 shrink-0" /> Live Board
           </Link>
         </Button>
-        <HelpDialog className="h-12 font-bold hover:scale-[1.02] active:scale-[0.98] transition-all border border-border/50" />
-        <LogoutButton className="h-12 font-bold hover:scale-[1.02] active:scale-[0.98] transition-all border border-border/50" />
+        <HelpDialog className="h-12 text-xs sm:text-sm font-bold hover:scale-[1.02] active:scale-[0.98] transition-all border border-border/50 px-2 sm:px-4" />
+        <LogoutButton className="h-12 text-xs sm:text-sm font-bold hover:scale-[1.02] active:scale-[0.98] transition-all border border-border/50 px-2 sm:px-4" />
       </div>
     </div>
   );

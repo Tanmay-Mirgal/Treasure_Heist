@@ -54,19 +54,19 @@ export function ScoreClient() {
   return (
     <div className="space-y-5">
       {/* Team Loot Header */}
-      <div className="relative overflow-hidden rounded-3xl border-2 border-amber-400 bg-gradient-to-b from-slate-900/95 via-slate-900/85 to-slate-950 p-6 shadow-2xl backdrop-blur-xl">
+      <div className="relative overflow-hidden rounded-3xl border-2 border-amber-400 bg-gradient-to-b from-slate-900/95 via-slate-900/85 to-slate-950 p-4 sm:p-6 shadow-2xl backdrop-blur-xl">
         <div className="absolute inset-x-0 top-0 h-1.5 subway-hazard" />
-        <div className="flex items-center justify-between gap-3 pt-1">
-          <div>
-            <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-amber-400">
-              <Coins className="size-3.5 text-amber-400 drop-shadow" />
-              ★ RUNNER&apos;S LOOT VAULT ★
+        <div className="flex items-center justify-between gap-2.5 sm:gap-3 pt-1">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-amber-400">
+              <Coins className="size-3.5 text-amber-400 drop-shadow shrink-0" />
+              <span>★ RUNNER&apos;S LOOT VAULT ★</span>
             </div>
-            <h1 className="mt-1 font-heading text-2xl font-black tracking-tight text-white">{data.team.name}</h1>
+            <h1 className="mt-1 truncate font-heading text-xl sm:text-2xl font-black tracking-tight text-white">{data.team.name}</h1>
           </div>
-          <div className="rounded-2xl border-2 border-amber-400/60 bg-gradient-to-b from-amber-400/20 to-amber-500/10 px-5 py-2.5 text-right shadow-[0_2px_18px_rgba(245,158,11,0.35)]">
-            <span className="text-[10px] font-black uppercase tracking-wider text-amber-300">TOTAL COINS</span>
-            <div className="hud-number font-heading text-3xl font-black text-amber-300 drop-shadow-[0_2px_10px_rgba(245,158,11,0.6)]">
+          <div className="rounded-2xl border-2 border-amber-400/60 bg-gradient-to-b from-amber-400/20 to-amber-500/10 px-3.5 sm:px-5 py-2 sm:py-2.5 text-right shadow-[0_2px_18px_rgba(245,158,11,0.35)] shrink-0">
+            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-amber-300">TOTAL COINS</span>
+            <div className="hud-number font-heading text-2xl sm:text-3xl font-black text-amber-300 drop-shadow-[0_2px_10px_rgba(245,158,11,0.6)]">
               {data.score}
             </div>
           </div>
@@ -80,7 +80,7 @@ export function ScoreClient() {
 
       <section aria-labelledby="breakdown">
         <h2 id="breakdown" className="mb-2 font-heading text-lg font-semibold">Score breakdown</h2>
-        <div className="overflow-hidden rounded-xl border">
+        <div className="overflow-x-auto rounded-xl border">
           <Table>
             <TableHeader>
               <TableRow>
@@ -121,7 +121,7 @@ export function ScoreClient() {
             <AlertDescription>Scoring is currently paused by the organizers.</AlertDescription>
           </Alert>
         )}
-        <div className="overflow-hidden rounded-xl border">
+        <div className="overflow-x-auto rounded-xl border">
           <Table>
             <TableBody>
               <TableRow>

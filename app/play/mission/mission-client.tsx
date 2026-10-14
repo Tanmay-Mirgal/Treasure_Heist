@@ -94,22 +94,22 @@ export function MissionClient() {
           <Label htmlFor="answer" className="pt-1 flex items-center gap-2 font-heading text-sm font-black tracking-wide text-cyan-300">
             <KeyRound className="size-4 text-cyan-400" /> ENTER STATION PASSKEY
           </Label>
-          <div className="flex gap-2.5">
+          <div className="flex flex-col sm:flex-row gap-2.5">
             <Input
               id="answer"
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
               maxLength={200}
               placeholder="Type your answer here…"
-              className="h-13 border-2 border-slate-700 bg-slate-950/80 font-mono text-base font-bold tracking-wider focus-visible:ring-cyan-400 text-white"
+              className="h-13 border-2 border-slate-700 bg-slate-950/80 font-mono text-base font-bold tracking-wider focus-visible:ring-cyan-400 text-white flex-1"
               autoComplete="off"
             />
             <button
               type="submit"
-              className="subway-btn-cyan h-13 px-6 rounded-2xl font-heading font-black tracking-wider uppercase transition-all"
+              className="subway-btn-cyan h-13 px-6 w-full sm:w-auto rounded-2xl font-heading font-black tracking-wider uppercase transition-all"
               disabled={answerBusy || !answer.trim()}
             >
-              {answerBusy ? <Loader2 className="size-5 animate-spin" /> : "SUBMIT"}
+              {answerBusy ? <Loader2 className="size-5 animate-spin" /> : "SUBMIT PASSKEY"}
             </button>
           </div>
           {answerMsg && (
@@ -171,15 +171,15 @@ export function MissionClient() {
       {!progress.finished ? (
         <Link
           href="/play/scan"
-          className="subway-btn-gold h-14 w-full rounded-2xl flex items-center justify-center gap-2 font-heading text-base font-black tracking-wider uppercase"
+          className="subway-btn-gold h-14 w-full rounded-2xl flex items-center justify-center gap-2 px-3 font-heading text-xs sm:text-base font-black tracking-wider uppercase text-center"
         >
-          <ScanLine className="size-6 stroke-[3]" />
-          <span>FOUND THE STATION? SCAN QR 🛹</span>
+          <ScanLine className="size-5 sm:size-6 stroke-[3] shrink-0" />
+          <span className="truncate">FOUND THE STATION? SCAN QR 🛹</span>
         </Link>
       ) : (
         <Link
           href="/play/complete"
-          className="subway-btn-gold h-14 w-full rounded-2xl flex items-center justify-center gap-2 font-heading text-base font-black tracking-wider uppercase"
+          className="subway-btn-gold h-14 w-full rounded-2xl flex items-center justify-center gap-2 px-3 font-heading text-sm sm:text-base font-black tracking-wider uppercase text-center"
         >
           <Flag className="size-5 stroke-[2.5]" />
           <span>VIEW FINISH SCREEN</span>

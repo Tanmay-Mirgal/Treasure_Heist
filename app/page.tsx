@@ -62,47 +62,47 @@ export default function Landing() {
 
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 pb-20 pt-6 sm:px-6">
         {/* Navigation Header */}
-        <header className="flex items-center justify-between">
+        <header className="flex items-center justify-between gap-3">
           <Wordmark tagline />
           <Link
             href="/admin/login"
-            className="rounded-full border border-slate-700 bg-slate-900/80 px-3 py-1 text-xs font-bold text-slate-400 uppercase tracking-wider transition-colors hover:border-slate-500 hover:text-white"
+            className="rounded-full border border-slate-700 bg-slate-900/80 px-2.5 py-1 text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider transition-colors hover:border-slate-500 hover:text-white shrink-0"
           >
             Organizer Login
           </Link>
         </header>
 
         {/* Hero Section */}
-        <section className="mt-10 grid items-center gap-10 md:mt-16 md:grid-cols-[1.2fr_1fr]">
+        <section className="mt-8 grid items-center gap-8 md:mt-16 md:grid-cols-[1.2fr_1fr]">
           <div>
             {/* Subway tag sticker */}
-            <div className="inline-flex items-center gap-2 rounded-full border-2 border-yellow-400 bg-yellow-400/20 px-3.5 py-1 text-xs font-black uppercase tracking-wider text-yellow-300 shadow-[0_0_15px_rgba(250,204,21,0.4)]">
+            <div className="inline-flex items-center gap-2 rounded-full border-2 border-yellow-400 bg-yellow-400/20 px-3 py-1 text-[11px] sm:text-xs font-black uppercase tracking-wider text-yellow-300 shadow-[0_0_15px_rgba(250,204,21,0.4)]">
               <span className="size-2 rounded-full bg-yellow-400 animate-ping" />
               <span>LIVE CAMPUS SURFERS MISSION</span>
             </div>
 
-            <h1 className="mt-5 font-heading text-5xl font-black leading-[1.02] tracking-tight sm:text-6xl text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.8)]">
+            <h1 className="mt-4 font-heading text-4xl font-black leading-[1.05] tracking-tight sm:text-6xl text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.8)]">
               SUBWAY <span className="bg-gradient-to-r from-yellow-300 via-amber-400 to-orange-500 bg-clip-text text-transparent">HEIST</span>
             </h1>
 
-            <p className="mt-3 flex items-center gap-2 font-heading text-sm font-black tracking-[0.25em] text-cyan-400 uppercase">
+            <div className="mt-3 flex flex-wrap items-center gap-1.5 sm:gap-2 font-heading text-xs sm:text-sm font-black tracking-[0.2em] sm:tracking-[0.25em] text-cyan-400 uppercase">
               <span>RUN THE TRACKS</span>
               <span className="text-slate-600">·</span>
               <span>BAG THE COINS</span>
               <span className="text-slate-600">·</span>
               <span>CRACK THE VAULT</span>
-            </p>
+            </div>
 
-            <p className="mt-6 max-w-lg text-base leading-relaxed text-slate-300 font-medium">
+            <p className="mt-5 max-w-lg text-sm sm:text-base leading-relaxed text-slate-300 font-medium">
               Ten rival crews. Endless subway rails spanning across the entire campus. Crack hidden riddles, sprint to
               each railway station, scan verified QR tags, and trigger game-changing power-ups before time runs out!
             </p>
 
-            {/* Chunky Subway Surfers 3D Arcade CTAs */}
-            <div className="mt-8 flex flex-wrap gap-4">
+            {/* Chunky Subway Surfers 3D Arcade CTAs - Full width on mobile, auto on desktop */}
+            <div className="mt-7 flex flex-col sm:flex-row gap-3.5">
               <Link
                 href="/login"
-                className="subway-btn-gold inline-flex h-14 items-center justify-center gap-2.5 rounded-2xl px-8 font-heading text-base font-black tracking-wider uppercase"
+                className="subway-btn-gold inline-flex h-14 w-full sm:w-auto items-center justify-center gap-2.5 rounded-2xl px-8 font-heading text-base font-black tracking-wider uppercase"
               >
                 <span>START RUNNING</span>
                 <span className="text-xl">🛹</span>
@@ -111,7 +111,7 @@ export default function Landing() {
 
               <Link
                 href="/leaderboard"
-                className="subway-btn-cyan inline-flex h-14 items-center justify-center gap-2.5 rounded-2xl px-6 font-heading text-base font-black tracking-wider uppercase"
+                className="subway-btn-cyan inline-flex h-14 w-full sm:w-auto items-center justify-center gap-2.5 rounded-2xl px-6 font-heading text-base font-black tracking-wider uppercase"
               >
                 <Trophy className="size-5 stroke-[2.5]" />
                 <span>HIGH SCORES</span>
@@ -228,14 +228,14 @@ export default function Landing() {
 
         {/* Subway Surfers Power-ups on the Line */}
         <section aria-labelledby="powers-title" className="mt-14">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <span className="text-xl">⚡</span>
-              <h2 id="powers-title" className="font-heading text-lg font-black uppercase tracking-widest text-slate-300">
+              <h2 id="powers-title" className="font-heading text-base sm:text-lg font-black uppercase tracking-widest text-slate-300">
                 POWER-UPS ON THE TRACKS
               </h2>
             </div>
-            <span className="text-xs font-black uppercase tracking-widest text-yellow-400">
+            <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-yellow-400">
               ★ OFFICIAL EVENT ITEMS
             </span>
           </div>
