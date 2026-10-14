@@ -14,5 +14,7 @@ export const POST = handle(async (req) => {
   const team = await requireTeam(req);
   const body = await readJson(req, Body);
   const result = await activateMagnet({ teamId: String(team._id), ...body });
+  const { notifyRealtime } = await import("@/lib/server/notify");
+  void notifyRealtime({ leaderboard: true, teamIds: [String(team._id), body.targetTeamId] });
   return ok(result);
 });

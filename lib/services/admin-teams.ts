@@ -307,7 +307,7 @@ export async function adjustScore(actor: AdminActor, id: string, delta: number, 
   const team = await loadTeam(id);
   if (!Number.isInteger(delta) || delta === 0) throw new ApiError(400, "BAD_REQUEST", "Adjustment must be a non-zero whole number.");
   const isTest = await isRehearsal();
-  return withTransaction(async (session) => {
+  const out = await withTransaction(async (session) => {
     const now = new Date();
     const updated = await Team.findOneAndUpdate(
       { _id: team._id, ...(delta < 0 ? { score: { $gte: -delta } } : {}) },
@@ -339,6 +339,9 @@ export async function adjustScore(actor: AdminActor, id: string, delta: number, 
     await audit(actor, { action: "SCORE_ADJUST", entityType: "Team", entityId: id, before: { score: team.score }, after: { score: updated.score, delta }, reason }, session);
     return { score: updated.score };
   });
+  const { notifyRealtime } = await import("@/lib/server/notify");
+  void notifyRealtime({ leaderboard: true, teamIds: [id] });
+  return out;
 }
 
 export async function clearAwaitingAnswer(actor: AdminActor, id: string, reason: string) {
@@ -359,7 +362,7 @@ export async function rollbackProgress(actor: AdminActor, id: string, toPosition
   const settings = await getSettings();
   const rules = rulesOf(settings);
   const isTest = settings.status === "SETUP";
-  return withTransaction(async (session) => {
+  const out = await withTransaction(async (session) => {
     const now = new Date();
     const voided = await CheckpointCompletion.find({ team: team._id, voided: false, position: { $gt: toPosition } })
       .session(session)
@@ -427,6 +430,9 @@ export async function rollbackProgress(actor: AdminActor, id: string, toPosition
     );
     return { currentPosition: toPosition, score: updated.score, voided: voided.length, pointsReversed: reversal };
   });
+  const { notifyRealtime } = await import("@/lib/server/notify");
+  void notifyRealtime({ leaderboard: true, teamIds: [id] });
+  return out;
 }
 
 export async function addAdminNote(actor: AdminActor, id: string, text: string) {
@@ -454,6 +460,8 @@ export async function resetTeamProgress(actor: AdminActor, id: string, reason: s
     after: { currentPosition: 0, score: 0 },
     reason,
   });
+  const { notifyRealtime } = await import("@/lib/server/notify");
+  void notifyRealtime({ leaderboard: true, teamIds: [id] });
 }
 
 /** Reset a team's score/points to 0 without clearing their clue position. */
@@ -467,7 +475,7 @@ export async function resetTeamScore(actor: AdminActor, id: string, reason: stri
 export async function resetAllTeamScores(actor: AdminActor, reason: string) {
   await ready();
   const isTest = await isRehearsal();
-  return withTransaction(async (session) => {
+  const out = await withTransaction(async (session) => {
     const teams = await Team.find({ score: { $gt: 0 } }).session(session).lean<TeamDoc[]>();
     const now = new Date();
     for (const t of teams) {
@@ -506,6 +514,9 @@ export async function resetAllTeamScores(actor: AdminActor, reason: string) {
     );
     return { teamsReset: teams.length };
   });
+  const { notifyRealtime } = await import("@/lib/server/notify");
+  void notifyRealtime({ leaderboard: true });
+  return out;
 }
 
 export async function clearTeamGameData(teamIds: Types.ObjectId[] | "ALL", initialHints: number) {

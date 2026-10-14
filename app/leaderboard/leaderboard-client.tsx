@@ -2,40 +2,25 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Lock, RefreshCw, Trophy } from "lucide-react";
+import { ArrowLeft, Lock, RefreshCw, Trophy, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Wordmark } from "@/components/heist/brand";
 import { EmptyState, SignalDot, TrackDivider, formatTime } from "@/components/heist/bits";
 import { api } from "@/lib/client/api";
-import { usePoll } from "@/hooks/use-poll";
+import { useRealtimeLeaderboard } from "@/hooks/use-realtime-leaderboard";
 import { cn } from "@/lib/utils";
 
-type Row = {
-  rank: number;
-  teamId: string;
-  name: string;
-  number: number;
-  score: number;
-  completed: number;
-  total: number;
-  status: "NOT_STARTED" | "IN_PROGRESS" | "FINISHED" | "DISABLED";
-  finishedAt: string | null;
-  lastActivityAt: string | null;
-  isYou: boolean;
-};
-type Board = { frozen: boolean; frozenAt: string | null; rows: Row[]; eventStatus: string; testMode: boolean };
-
-const STATUS: Record<Row["status"], { label: string; tone: "ok" | "signal" | "muted" | "danger" }> = {
-  FINISHED: { label: "Escaped", tone: "ok" },
+const STATUS: Record<string, { label: string; tone: "ok" | "signal" | "muted" | "danger" }> = {
+  FINISHED: { label: "Vault Breached", tone: "ok" },
   IN_PROGRESS: { label: "On route", tone: "signal" },
   NOT_STARTED: { label: "At start", tone: "muted" },
   DISABLED: { label: "Disabled", tone: "danger" },
 };
 
 export function LeaderboardClient() {
-  const { data, loading, refresh, lastOkAt } = usePoll<Board>((signal) => api<Board>("/api/leaderboard", { signal }), 10_000);
+  const { data, loading, refresh, lastLiveAt, wsConnected } = useRealtimeLeaderboard(12_000);
   const [back, setBack] = useState<{ href: string; label: string }>({ href: "/", label: "Home" });
 
   useEffect(() => {
@@ -62,23 +47,28 @@ export function LeaderboardClient() {
         <div className="mt-8 flex flex-wrap items-end justify-between gap-3">
           <div>
             <div className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-yellow-400">
-              <span>★ OFFICIAL CAMPUS HIGH SCORES ★</span>
+              <span>★ OFFICIAL FASTEST RUNNER RANKINGS ★</span>
             </div>
             <h1 className="mt-1 flex items-center gap-2.5 font-heading text-3xl font-black text-white">
               <Trophy className="size-8 text-yellow-400 drop-shadow-[0_2px_10px_rgba(250,204,21,0.6)]" /> Top Surfers Board
             </h1>
-            <p className="mt-1 flex items-center gap-2 text-sm font-bold text-slate-400" aria-live="polite">
+            <div className="mt-1 flex flex-wrap items-center gap-2 text-xs sm:text-sm font-bold text-slate-400" aria-live="polite">
               {data?.frozen ? (
-                <>
-                  <Lock className="size-3.5 text-amber-400" /> Final results locked at {formatTime(data.frozenAt)}
-                </>
+                <span className="flex items-center gap-1.5 text-amber-400">
+                  <Lock className="size-3.5" /> Final results locked at {formatTime(data.frozenAt)}
+                </span>
               ) : (
                 <>
-                  <span className="size-2 rounded-full bg-emerald-400 animate-ping" />
-                  Live Rails · updated {lastOkAt ? formatTime(new Date(lastOkAt)) : "…"}
+                  <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] sm:text-xs font-black uppercase tracking-wider", wsConnected ? "border border-emerald-400/50 bg-emerald-500/20 text-emerald-300 shadow-[0_0_10px_rgba(52,211,153,0.4)]" : "border border-cyan-400/40 bg-cyan-500/10 text-cyan-300")}>
+                    <Zap className={cn("size-3", wsConnected && "animate-bounce text-emerald-400")} />
+                    {wsConnected ? "WebSocket Real-time Live" : "Polling Active"}
+                  </span>
+                  <span className="text-slate-400">
+                    · updated {lastLiveAt ? formatTime(lastLiveAt) : "…"}
+                  </span>
                 </>
               )}
-            </p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -102,17 +92,17 @@ export function LeaderboardClient() {
         ) : (
           <ol className="space-y-3">
             {data.rows.map((r) => {
-              const s = STATUS[r.status];
+              const s = STATUS[r.status] ?? STATUS.NOT_STARTED;
               const pct = r.total ? Math.round((r.completed / r.total) * 100) : 0;
-              const isFirst = r.rank === 1 && r.score > 0;
-              const isSecond = r.rank === 2 && r.score > 0;
-              const isThird = r.rank === 3 && r.score > 0;
+              const isFirst = r.rank === 1 && (r.score > 0 || r.completed > 0);
+              const isSecond = r.rank === 2 && (r.score > 0 || r.completed > 0);
+              const isThird = r.rank === 3 && (r.score > 0 || r.completed > 0);
 
               return (
                 <li
                   key={r.teamId}
                   className={cn(
-                    "flex items-center gap-2.5 sm:gap-4 rounded-2xl border-2 p-3 sm:p-4.5 backdrop-blur-md transition-all duration-150 hover:scale-[1.01]",
+                    "flex items-center gap-2.5 sm:gap-4 rounded-2xl border-2 p-3 sm:p-4 backdrop-blur-md transition-all duration-150 hover:scale-[1.01]",
                     isFirst && "border-amber-400 bg-gradient-to-r from-amber-500/25 via-slate-900 to-slate-900 shadow-[0_0_30px_rgba(245,158,11,0.35)]",
                     isSecond && "border-slate-300 bg-gradient-to-r from-slate-400/20 via-slate-900 to-slate-900 shadow-[0_0_20px_rgba(203,213,225,0.2)]",
                     isThird && "border-orange-500 bg-gradient-to-r from-orange-600/20 via-slate-900 to-slate-900 shadow-[0_0_20px_rgba(234,88,12,0.2)]",
@@ -134,25 +124,44 @@ export function LeaderboardClient() {
                   </span>
 
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5 sm:gap-2">
+                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                       <span className="truncate font-heading text-xs sm:text-base font-black tracking-tight text-white">{r.name}</span>
                       {r.isYou && (
                         <Badge className="bg-cyan-500/30 text-cyan-300 border border-cyan-400/60 font-black uppercase text-[8px] sm:text-[10px] tracking-wider px-1.5 py-0 shrink-0">
                           YOU 🛹
                         </Badge>
                       )}
+                      {/* TIME TAKEN BADGE PROMINENTLY VISIBLE */}
+                      {r.formattedDuration && r.formattedDuration !== "—" && (
+                        <span className={cn(
+                          "rounded-lg border px-2 py-0.5 text-[9px] sm:text-[11px] font-mono font-black uppercase tracking-wider shrink-0",
+                          r.status === "FINISHED"
+                            ? "border-emerald-400/60 bg-emerald-500/25 text-emerald-300 shadow-[0_0_10px_rgba(52,211,153,0.5)]"
+                            : "border-cyan-400/50 bg-cyan-500/20 text-cyan-300"
+                        )}>
+                          ⏱️ {r.formattedDuration}
+                        </span>
+                      )}
                     </div>
-                    <div className="mt-1 flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-slate-400 font-bold">
-                      <span className="relative h-2 w-10 sm:w-36 overflow-hidden rounded-full bg-slate-800 shrink-0" aria-hidden>
+                    <div className="mt-1 flex flex-wrap items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-slate-400 font-bold">
+                      <span className="relative h-2 w-10 sm:w-28 overflow-hidden rounded-full bg-slate-800 shrink-0" aria-hidden>
                         <span className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-cyan-400 via-emerald-400 to-amber-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" style={{ width: `${pct}%` }} />
                       </span>
                       <span className="hud-number font-black text-white shrink-0">
-                        {r.completed}/{r.total}
+                        {r.completed}/{r.total} stations
                       </span>
-                      <span className="hidden xs:inline-flex items-center gap-1 truncate">
+                      <span className="inline-flex items-center gap-1 truncate">
                         <SignalDot tone={s.tone} className="size-1.5 shrink-0" /> {s.label}
                       </span>
-                      {r.lastActivityAt && <span className="hidden md:inline text-slate-500">· {formatTime(r.lastActivityAt)}</span>}
+                      {r.status === "FINISHED" ? (
+                        <span className="font-mono text-emerald-300 font-black text-[10px] sm:text-xs">
+                          · Cleared in {r.formattedDuration}
+                        </span>
+                      ) : r.status === "IN_PROGRESS" && r.formattedDuration && r.formattedDuration !== "—" ? (
+                        <span className="font-mono text-cyan-300 font-bold text-[10px] sm:text-xs">
+                          · {r.formattedDuration} on tracks
+                        </span>
+                      ) : null}
                     </div>
                   </div>
 
@@ -168,7 +177,7 @@ export function LeaderboardClient() {
           </ol>
         )}
         <p className="mt-5 text-center text-xs font-bold text-slate-500">
-          Rankings update live in real-time. Speed + accuracy determine champion standing.
+          Rankings update live in real-time via WebSockets. Least time taken to clear all stations claims 👑 1st Rank!
         </p>
       </main>
     </div>

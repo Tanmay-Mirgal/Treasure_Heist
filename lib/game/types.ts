@@ -54,7 +54,11 @@ export type RejectReason = (typeof REJECT_REASONS)[number];
 export const POWERUP_STATUSES = ["AVAILABLE", "USED", "WASTED", "VOID"] as const;
 export type PowerUpStatus = (typeof POWERUP_STATUSES)[number];
 
-export const RANKING_RULES = ["POINTS_THEN_EARLIEST", "POINTS_THEN_PROGRESS_THEN_EARLIEST"] as const;
+export const RANKING_RULES = [
+  "POINTS_THEN_EARLIEST",
+  "POINTS_THEN_PROGRESS_THEN_EARLIEST",
+  "LEAST_TIME_FIRST",
+] as const;
 export type RankingRule = (typeof RANKING_RULES)[number];
 
 export const SUPER_SHOES_MODES = ["HINT", "SCORE_ONLY"] as const;

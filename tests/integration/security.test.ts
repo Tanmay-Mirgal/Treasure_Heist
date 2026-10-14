@@ -128,7 +128,21 @@ describe("participants never receive private data", () => {
   it("the leaderboard shows aggregates only", async () => {
     const rows = (await call(leaderboard, { cookie: t1 })).body.data.rows as Record<string, unknown>[];
     for (const row of rows)
-      expect(Object.keys(row).sort()).toEqual(["completed", "finishedAt", "isYou", "lastActivityAt", "name", "number", "rank", "score", "status", "teamId", "total"]);
+      expect(Object.keys(row).sort()).toEqual([
+        "completed",
+        "durationMs",
+        "finishedAt",
+        "formattedDuration",
+        "isYou",
+        "lastActivityAt",
+        "name",
+        "number",
+        "rank",
+        "score",
+        "status",
+        "teamId",
+        "total",
+      ]);
   });
 });
 

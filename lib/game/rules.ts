@@ -86,15 +86,46 @@ export type RankableTeam = {
   completed: number;
   scoreChangedAt?: Date | null;
   finishedAt?: Date | null;
+  gameStartedAt?: Date | null;
+  durationMs?: number | null;
 };
 
 /**
- * Deterministic ranking. Default: points (desc), then whoever reached that
- * score earliest, then most checkpoints, then team number.
+ * Deterministic ranking.
+ * Default: points (desc), then whoever reached that score earliest, then most checkpoints, then team number.
+ * LEAST_TIME_FIRST: finished teams by lowest duration taken (asc), then in-progress teams by checkpoints (desc) and elapsed time (asc).
  */
 export function rankTeams<T extends RankableTeam>(teams: T[], rule: RankingRule): (T & { rank: number })[] {
   const t = (d?: Date | null) => (d ? d.getTime() : Number.MAX_SAFE_INTEGER);
   const sorted = [...teams].sort((a, b) => {
+    if (rule === "LEAST_TIME_FIRST") {
+      // 1. Finished teams always rank ahead of non-finished
+      const aFinished = Boolean(a.finishedAt);
+      const bFinished = Boolean(b.finishedAt);
+      if (aFinished !== bFinished) return aFinished ? -1 : 1;
+
+      if (aFinished && bFinished) {
+        // Both finished: lowest duration wins!
+        const durA = typeof a.durationMs === "number" && a.durationMs > 0 ? a.durationMs : Number.MAX_SAFE_INTEGER;
+        const durB = typeof b.durationMs === "number" && b.durationMs > 0 ? b.durationMs : Number.MAX_SAFE_INTEGER;
+        if (durA !== durB) return durA - durB;
+        if (b.score !== a.score) return b.score - a.score;
+        return a.teamNumber - b.teamNumber;
+      }
+
+      // Neither finished: whoever completed more stations ranks higher
+      if (b.completed !== a.completed) return b.completed - a.completed;
+
+      // Same number of stations: whoever reached it in least time ranks higher
+      const durA = typeof a.durationMs === "number" && a.durationMs > 0 ? a.durationMs : Number.MAX_SAFE_INTEGER;
+      const durB = typeof b.durationMs === "number" && b.durationMs > 0 ? b.durationMs : Number.MAX_SAFE_INTEGER;
+      if (durA !== durB) return durA - durB;
+
+      // Then score, then team number
+      if (b.score !== a.score) return b.score - a.score;
+      return a.teamNumber - b.teamNumber;
+    }
+
     if (b.score !== a.score) return b.score - a.score;
     if (rule === "POINTS_THEN_PROGRESS_THEN_EARLIEST" && b.completed !== a.completed) return b.completed - a.completed;
     const ta = a.score === 0 ? Number.MAX_SAFE_INTEGER : t(a.scoreChangedAt);

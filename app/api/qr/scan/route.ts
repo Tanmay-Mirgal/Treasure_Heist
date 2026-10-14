@@ -19,5 +19,9 @@ export const POST = handle(async (req) => {
   const correlationId = req.headers.get("x-request-id")?.slice(0, 64) || randomUUID();
   const result = await processScan({ teamId: String(team._id), raw: body.input, source: body.source, correlationId });
   if (result.outcome === "RATE_LIMITED") throw new ApiError(429, "RATE_LIMITED", result.message, { retryAfterMs: result.retryAfterMs });
+  if (result.outcome === "ACCEPTED") {
+    const { notifyRealtime } = await import("@/lib/server/notify");
+    void notifyRealtime({ leaderboard: true, teamIds: [String(team._id)] });
+  }
   return ok(result);
 });

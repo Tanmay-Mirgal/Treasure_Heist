@@ -88,9 +88,10 @@ export async function updateSettings(actor: AdminActor, patch: SettingsPatch, re
     before[k] = prev;
     after[k] = v;
   }
-  if (Object.keys(after).length === 0) return adminSettingsView(s);
   await EventSettings.updateOne({ key: "event" }, { $set: after });
   await audit(actor, { action: "SETTINGS_UPDATE", entityType: "EventSettings", entityId: "event", before, after, reason });
+  const { notifyRealtime } = await import("@/lib/server/notify");
+  void notifyRealtime({ leaderboard: true });
   return adminSettingsView(await getSettings());
 }
 
@@ -206,6 +207,8 @@ export async function eventAction(actor: AdminActor, action: EventAction, reason
     after: { status: set.status ?? s.status, testMode: set.testMode ?? s.testMode, leaderboardFrozen: set.leaderboardFrozen ?? s.leaderboardFrozen, note },
     reason,
   });
+  const { notifyRealtime } = await import("@/lib/server/notify");
+  void notifyRealtime({ leaderboard: true });
   return adminSettingsView(await getSettings());
 }
 

@@ -76,6 +76,56 @@ export function TeamStateProvider({ children }: { children: ReactNode }) {
     }
   }, [data]);
 
+  // Real-time WebSocket connection for instant score updates
+  useEffect(() => {
+    const teamId = data?.team.id;
+    if (!teamId) return;
+    let ws: WebSocket | null = null;
+    let retryTimer: NodeJS.Timeout | null = null;
+    let unmounted = false;
+
+    function connect() {
+      if (unmounted) return;
+      try {
+        const host = typeof window !== "undefined" ? window.location.hostname || "localhost" : "localhost";
+        ws = new WebSocket(`ws://${host}:3001`);
+        ws.onopen = () => {
+          if (unmounted) return;
+          ws?.send(JSON.stringify({ type: "SUBSCRIBE_TEAM", teamId }));
+        };
+        ws.onmessage = (event) => {
+          if (unmounted) return;
+          try {
+            const msg = JSON.parse(event.data);
+            if (msg.type === "TEAM_DATA") {
+              void refresh();
+            }
+          } catch {
+            // Ignore malformed
+          }
+        };
+        ws.onclose = () => {
+          if (unmounted) return;
+          retryTimer = setTimeout(connect, 3000);
+        };
+      } catch {
+        retryTimer = setTimeout(connect, 3000);
+      }
+    }
+
+    connect();
+
+    return () => {
+      unmounted = true;
+      if (retryTimer) clearTimeout(retryTimer);
+      try {
+        ws?.close();
+      } catch {
+        // Closed
+      }
+    };
+  }, [data?.team.id, refresh]);
+
   return (
     <TeamStateContext value={{ state: data, error, loading, lastOkAt, refresh }}>{children}</TeamStateContext>
   );

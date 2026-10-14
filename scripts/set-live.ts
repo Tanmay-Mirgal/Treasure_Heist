@@ -18,6 +18,7 @@ runMain(async () => {
       $set: {
         status: "RUNNING",
         testMode: false,
+        rankingRule: "LEAST_TIME_FIRST",
         participationEnabled: true,
         scoringEnabled: true,
         startedAt: now,

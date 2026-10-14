@@ -16,7 +16,22 @@ export type LeaderboardRow = {
   status: "NOT_STARTED" | "IN_PROGRESS" | "FINISHED" | "DISABLED";
   finishedAt: string | null;
   lastActivityAt: string | null;
+  durationMs: number | null;
+  formattedDuration: string | null;
+  isYou?: boolean;
 };
+
+export function formatDurationMs(ms: number | null): string {
+  if (ms === null || ms === undefined || ms < 0) return "—";
+  const totalSec = Math.floor(ms / 1000);
+  const hrs = Math.floor(totalSec / 3600);
+  const mins = Math.floor((totalSec % 3600) / 60);
+  const secs = totalSec % 60;
+  if (hrs > 0) {
+    return `${hrs}h ${mins.toString().padStart(2, "0")}m ${secs.toString().padStart(2, "0")}s`;
+  }
+  return `${mins}m ${secs.toString().padStart(2, "0")}s`;
+}
 
 /** Live public leaderboard rows computed from MongoDB (aggregate data only). */
 export async function computeLeaderboard(): Promise<LeaderboardRow[]> {
@@ -27,18 +42,35 @@ export async function computeLeaderboard(): Promise<LeaderboardRow[]> {
     TeamSequence.find({}, { team: 1, entries: 1 }).lean(),
   ]);
   const totals = new Map(seqs.map((s) => [String(s.team), s.entries.length]));
-  const ranked = rankTeams(
-    teams.map((t) => ({
+  const now = Date.now();
+  const eventStart = settings.startedAt ? new Date(settings.startedAt).getTime() : null;
+
+  const teamsWithDurations = teams.map((t) => {
+    let durationMs: number | null = null;
+    const start = t.gameStartedAt ? new Date(t.gameStartedAt).getTime() : eventStart;
+    if (t.finishedAt && start) {
+      durationMs = Math.max(0, new Date(t.finishedAt).getTime() - start);
+    } else if (t.currentPosition > 0 && start) {
+      const end = t.lastProgressAt ? new Date(t.lastProgressAt).getTime() : (t.lastActivityAt ? new Date(t.lastActivityAt).getTime() : now);
+      durationMs = Math.max(0, end - start);
+    }
+
+    return {
       id: String(t._id),
       teamNumber: t.teamNumber,
       score: t.score,
       completed: t.currentPosition,
       scoreChangedAt: t.scoreChangedAt,
       finishedAt: t.finishedAt,
+      gameStartedAt: t.gameStartedAt,
+      durationMs,
+      formattedDuration: formatDurationMs(durationMs),
       t,
-    })),
-    settings.rankingRule,
-  );
+    };
+  });
+
+  const ranked = rankTeams(teamsWithDurations, settings.rankingRule);
+
   return ranked.map((r) => ({
     rank: r.rank,
     teamId: r.id,
@@ -57,6 +89,8 @@ export async function computeLeaderboard(): Promise<LeaderboardRow[]> {
             : "NOT_STARTED",
     finishedAt: r.t.finishedAt ? new Date(r.t.finishedAt).toISOString() : null,
     lastActivityAt: r.t.lastActivityAt ? new Date(r.t.lastActivityAt).toISOString() : null,
+    durationMs: r.durationMs ?? null,
+    formattedDuration: r.formattedDuration ?? null,
   }));
 }
 
