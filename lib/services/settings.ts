@@ -6,16 +6,70 @@ import { ready } from "./bootstrap";
 
 export type Settings = EventSettingsDoc;
 
+let cachedSettings: { data: Settings; expiresAt: number } | null = null;
+
+export function invalidateSettingsCache() {
+  cachedSettings = null;
+}
+
 export async function getSettings(session?: ClientSession): Promise<Settings> {
-  await ready();
-  const existing = await EventSettings.findOne({ key: "event" }).session(session ?? null).lean<Settings>();
-  if (existing) return existing;
-  try {
-    await EventSettings.create([{ key: "event" }]);
-  } catch {
-    /* created concurrently */
+  // If session is provided (e.g. transaction), bypass cache to ensure read consistency
+  if (!session && cachedSettings && Date.now() < cachedSettings.expiresAt) {
+    return cachedSettings.data;
   }
-  return (await EventSettings.findOne({ key: "event" }).session(session ?? null).lean<Settings>())!;
+
+  await ready();
+  let existing = await EventSettings.findOne({ key: "event" }).session(session ?? null).lean<Settings>();
+  if (!existing) {
+    try {
+      await EventSettings.create([{ key: "event" }]);
+    } catch {
+      /* created concurrently */
+    }
+    existing = (await EventSettings.findOne({ key: "event" }).session(session ?? null).lean<Settings>())!;
+  }
+
+  // AUTO-TERMINATE EVENT WHEN TIMER EXPIRES:
+  // If the event is currently RUNNING or PAUSED with an enabled timer and duration has expired,
+  // automatically update the database record to ENDED so all clients, scans, and screens recognize
+  // that the event has terminated.
+  if ((existing.status === "RUNNING" || existing.status === "PAUSED") && existing.timer?.enabled && existing.startedAt) {
+    const t = timerOf(existing);
+    if (t.expired) {
+      const now = new Date();
+      const durationMs = (existing.timer.durationMinutes ?? 90) * 60_000;
+      const calculatedEnd = new Date(new Date(existing.startedAt).getTime() + (existing.totalPausedMs ?? 0) + durationMs);
+      const endedAt = calculatedEnd.getTime() <= now.getTime() ? calculatedEnd : now;
+
+      await EventSettings.updateOne(
+        { key: "event", status: { $in: ["RUNNING", "PAUSED"] } },
+        {
+          $set: {
+            status: "ENDED",
+            endedAt,
+          },
+        },
+      ).session(session ?? null);
+
+      existing = (await EventSettings.findOne({ key: "event" }).session(session ?? null).lean<Settings>())!;
+      invalidateSettingsCache();
+
+      // Notify real-time listeners across WebSockets / SSE
+      try {
+        const { notifyRealtime } = await import("../server/notify");
+        void notifyRealtime({ leaderboard: true });
+      } catch {
+        // Safe ignore
+      }
+    }
+  }
+
+  // Cache for 1500ms on serverless container (buffers 100 simultaneous requests)
+  if (!session) {
+    cachedSettings = { data: existing, expiresAt: Date.now() + 1500 };
+  }
+
+  return existing;
 }
 
 export function rulesOf(s: Settings): GameRules {

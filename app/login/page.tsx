@@ -3,10 +3,14 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { Wordmark } from "@/components/heist/brand";
 import { LoginForm } from "@/components/heist/login-form";
+import { redirectIfAuthenticated } from "@/lib/auth/server-guard";
 
 export const metadata: Metadata = { title: "Runner Check-in · Subway Heist" };
 
-export default function TeamLoginPage() {
+export const instant = false;
+
+export default async function TeamLoginPage() {
+  await redirectIfAuthenticated("team");
   return (
     <div className="relative min-h-screen flex flex-col justify-center overflow-x-hidden">
       {/* Top Hazard Stripe */}

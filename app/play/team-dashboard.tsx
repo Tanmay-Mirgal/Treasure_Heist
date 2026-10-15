@@ -11,18 +11,22 @@ import { StationLine } from "@/components/heist/station-line";
 import { HelpDialog, LogoutButton } from "@/components/heist/team-actions";
 import { useTeamState } from "@/components/heist/team-state";
 import { formatDuration, useServerCountdown } from "@/hooks/use-poll";
+import { useRealtimeTimer } from "@/hooks/use-realtime-timer";
 import { api } from "@/lib/client/api";
+
+import { EmbeddedLeaderboard } from "@/components/heist/embedded-leaderboard";
 
 export function TeamDashboard() {
   const { state, loading, error, refresh, lastOkAt } = useTeamState();
   const t = state?.event.timer;
-  const remaining = useServerCountdown(t?.remainingMs ?? null, lastOkAt, Boolean(t?.running && t.enabled));
+  const timer = useRealtimeTimer(t ? { ...t, status: state?.event.status } : undefined);
   const [marking, setMarking] = useState(false);
 
   if (loading && !state) return <DashboardSkeleton />;
   if (!state) return <Alert variant="destructive"><AlertDescription>{error?.message ?? "Could not load your mission."}</AlertDescription></Alert>;
 
   const { team, progress, mission, inventory, notifications, event } = state;
+  const isTimeUp = timer.isTimeUp || event.status === "ENDED" || Boolean(event.timer.enabled && event.timer.expired);
   const magnets = inventory.powerUps.filter((p) => p.type === "MAGNET" && p.status === "AVAILABLE");
   const unread = notifications.items.filter((n) => !n.read);
 
@@ -60,7 +64,26 @@ export function TeamDashboard() {
         </div>
       </div>
 
-      {unread.length > 0 && (
+      {/* PROMINENT TIME'S UP BANNER */}
+      {isTimeUp && (
+        <div className="relative overflow-hidden rounded-3xl border-3 border-amber-400 bg-gradient-to-b from-amber-500/30 via-slate-900/95 to-slate-950 p-6 text-center shadow-[0_0_50px_rgba(245,158,11,0.5)]">
+          <div className="absolute inset-x-0 top-0 h-2 subway-hazard animate-pulse" />
+          <div className="mx-auto flex size-14 items-center justify-center rounded-2xl border-2 border-amber-400 bg-amber-400/20 text-amber-300 shadow-[0_0_20px_rgba(250,204,21,0.6)]">
+            <Timer className="size-7 animate-bounce" />
+          </div>
+          <h2 className="mt-3 font-heading text-3xl sm:text-4xl font-black tracking-tight text-amber-300 drop-shadow-[0_2px_14px_rgba(250,204,21,0.9)]">
+            TIME&apos;S UP!
+          </h2>
+          <p className="mt-2 text-sm sm:text-base font-bold text-slate-200 max-w-md mx-auto">
+            The event timer has expired and the heist has officially terminated. All railway tracks are closed and no further scans can be done.
+          </p>
+          <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-yellow-400/50 bg-yellow-400/15 px-4 py-1 text-xs font-black uppercase tracking-wider text-yellow-300">
+            <span>🏁 FINAL VERIFIED STANDINGS DISPLAYED BELOW</span>
+          </div>
+        </div>
+      )}
+
+      {unread.length > 0 && !isTimeUp && (
         <Alert className="border-2 border-orange-400/60 bg-gradient-to-r from-orange-500/20 via-orange-500/10 to-transparent shadow-xl backdrop-blur-md">
           <Bell className="size-5 text-orange-400 animate-bounce" />
           <AlertTitle className="font-heading font-black text-orange-300 flex items-center justify-between">
@@ -89,22 +112,28 @@ export function TeamDashboard() {
           <div className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-[0.2em] text-cyan-400">
             <span className="size-2 rounded-full bg-cyan-400 motion-safe:animate-ping" />
             <span id="mission-status">
-              {progress.finished ? "★ ALL STATIONS CLEARED ★" : `RAILWAY TRACK ${progress.currentMission} OF ${progress.total}`}
+              {isTimeUp
+                ? "★ EVENT TERMINATED · FINAL RESULTS ★"
+                : progress.finished
+                  ? "★ ALL STATIONS CLEARED ★"
+                  : `RAILWAY TRACK ${progress.currentMission} OF ${progress.total}`}
             </span>
           </div>
-          {mission.lastAction && mission.lastAction !== "NORMAL" && !progress.finished && <ActionBadge action={mission.lastAction} />}
+          {mission.lastAction && mission.lastAction !== "NORMAL" && !progress.finished && !isTimeUp && <ActionBadge action={mission.lastAction} />}
         </div>
 
         <p className="mt-3 font-heading text-xl font-black leading-snug text-white">
-          {progress.finished
-            ? "Vault Breached! Victory is yours, runners!"
-            : mission.kind === "ANSWER"
-              ? "Station challenge unlocked — crack the passkey."
-              : mission.kind === "START"
-                ? "Scan Station #1 QR code to receive your first mission intel."
-                : mission.kind === "UNCONFIGURED"
-                  ? "Awaiting railway schedule from control room."
-                  : "Follow active route clues to the next railway station."}
+          {isTimeUp
+            ? "Subway Heist Ended — All Checkpoints Locked"
+            : progress.finished
+              ? "Vault Breached! Victory is yours, runners!"
+              : mission.kind === "ANSWER"
+                ? "Station challenge unlocked — crack the passkey."
+                : mission.kind === "START"
+                  ? "Scan Station #1 QR code to receive your first mission intel."
+                  : mission.kind === "UNCONFIGURED"
+                    ? "Awaiting railway schedule from control room."
+                    : "Follow active route clues to the next railway station."}
         </p>
 
         {/* Railway Line with ties & hoverboard */}
@@ -114,7 +143,15 @@ export function TeamDashboard() {
 
         {/* Chunky 3D Arcade Action Buttons */}
         <div className="mt-6 grid grid-cols-2 gap-2.5 sm:gap-3">
-          {progress.finished ? (
+          {isTimeUp ? (
+            <Link
+              href="/leaderboard"
+              className="col-span-2 subway-btn-gold h-14 rounded-2xl flex items-center justify-center gap-2.5 px-4 font-heading text-sm sm:text-base font-black tracking-wider uppercase text-center shadow-[0_0_25px_rgba(250,204,21,0.5)]"
+            >
+              <Trophy className="size-5 stroke-[2.5]" />
+              <span>VIEW COMPLETE LEADERBOARD 🏆</span>
+            </Link>
+          ) : progress.finished ? (
             <Link
               href="/play/complete"
               className="col-span-2 subway-btn-gold h-14 rounded-2xl flex items-center justify-center gap-2 px-3 font-heading text-sm sm:text-base font-black tracking-wider uppercase text-center"
@@ -144,10 +181,15 @@ export function TeamDashboard() {
         </div>
       </section>
 
+      {/* EMBEDDED REALTIME FINAL LEADERBOARD WHEN TIME IS UP */}
+      {isTimeUp && (
+        <EmbeddedLeaderboard currentTeamNumber={team.number} />
+      )}
+
       {/* Mission Clock / Countdown — full HUD card */}
       {event.timer.enabled && (() => {
-        const expired = remaining !== null && remaining <= 0;
-        const lowTime = !expired && remaining !== null && remaining < 5 * 60_000;
+        const expired = timer.isTimeUp;
+        const lowTime = timer.isLowTime;
         const isSetup = event.status === "SETUP";
         return (
           <div
@@ -194,7 +236,7 @@ export function TeamDashboard() {
                       ? "TIME'S UP!"
                       : isSetup
                         ? formatDuration(event.timer.durationMs)
-                        : formatDuration(remaining)}
+                        : timer.formatted}
                   </div>
                 </div>
               </div>
@@ -216,7 +258,7 @@ export function TeamDashboard() {
       </div>
 
       {/* MAGNET Tactical Weapon Card */}
-      {magnets.length > 0 && (
+      {!isTimeUp && magnets.length > 0 && (
         <Link
           href={`/play/magnet?id=${magnets[0]!.id}`}
           className="group relative flex items-center gap-2.5 sm:gap-4 overflow-hidden rounded-2xl border-2 border-orange-400 bg-gradient-to-r from-orange-500/25 via-amber-500/20 to-orange-500/15 p-3.5 sm:p-4 shadow-[0_0_25px_rgba(251,146,60,0.4)] transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"

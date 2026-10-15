@@ -5,6 +5,7 @@ import { ready } from "../services/bootstrap";
 import { getSettings, timerOf } from "../services/settings";
 
 // Global in-memory subscriber registries
+const allClients = new Set<WebSocket>();
 const leaderboardClients = new Set<WebSocket>();
 const teamClients = new Map<string, Set<WebSocket>>();
 
@@ -59,35 +60,48 @@ export async function broadcastTeam(teamId: string) {
 }
 
 /**
- * Start a periodic timer-tick loop that keeps leaderboard clients updated
- * with live timer data while the event timer is running.
- * Ticks every 5s normally; accelerates to 1s when <2 min remain.
+ * Start a 1-second timer-tick loop that keeps ALL connected clients
+ * synchronized with live server timer data and triggers simultaneous TIME_UP.
  */
 function startTimerTicker() {
   if (timerTickInterval) return;
-  let currentInterval = 5000;
 
   async function tick() {
-    if (leaderboardClients.size === 0) return;
+    if (allClients.size === 0) return;
     try {
       const settings = await getSettings();
       const t = timerOf(settings);
-      if (!t.enabled || !t.running) return; // no active timer — skip
-      void broadcastLeaderboard();
-      // Speed up when nearly expired
-      const nextInterval = t.remainingMs !== null && t.remainingMs < 2 * 60_000 ? 1000 : 5000;
-      if (nextInterval !== currentInterval) {
-        currentInterval = nextInterval;
-        if (timerTickInterval) clearInterval(timerTickInterval);
-        timerTickInterval = setInterval(() => void tick(), currentInterval);
+      const isEnded = settings.status === "ENDED" || t.expired;
+
+      const message = {
+        type: isEnded ? "TIME_UP" : "TIMER_SYNC",
+        payload: {
+          enabled: t.enabled,
+          durationMs: t.durationMs,
+          remainingMs: t.remainingMs,
+          elapsedMs: t.elapsedMs,
+          running: t.running,
+          expired: isEnded,
+          serverNow: new Date().toISOString(),
+          eventStatus: settings.status,
+        },
+        timestamp: Date.now(),
+      };
+
+      for (const ws of allClients) {
+        safeSend(ws, message);
+      }
+
+      if (isEnded) {
+        void broadcastLeaderboard();
       }
     } catch {
       // Silently ignore errors in background ticker
     }
   }
 
-  timerTickInterval = setInterval(() => void tick(), currentInterval);
-  console.log("[WS] Timer ticker started (5s base, 1s when <2 min remain)");
+  timerTickInterval = setInterval(() => void tick(), 1000);
+  console.log("[WS] Synchronized 1s timer ticker active across all clients");
 }
 
 /**
@@ -117,6 +131,7 @@ export function startWebSocketServer(port: number = Number(process.env.WS_PORT) 
         JSON.stringify({
           status: "UP",
           type: "Subway Heist Real-time WebSocket Server",
+          totalClients: allClients.size,
           leaderboardSubscribers: leaderboardClients.size,
           teamSubscribers: Array.from(teamClients.entries()).map(([t, s]) => ({ teamId: t, count: s.size })),
         })
@@ -157,18 +172,67 @@ export function startWebSocketServer(port: number = Number(process.env.WS_PORT) 
 
   const wss = new WebSocketServer({ server });
 
-  wss.on("connection", (ws) => {
+  wss.on("connection", async (ws) => {
+    allClients.add(ws);
     let subscribedTeamId: string | null = null;
     let isLeaderboardSub = false;
 
     // Send initial welcome message
     safeSend(ws, { type: "CONNECTED", message: "Subway Heist Real-time Socket Live 🛹" });
 
+    // Send immediate timer sync on connect
+    try {
+      await ready();
+      const settings = await getSettings();
+      const t = timerOf(settings);
+      const isEnded = settings.status === "ENDED" || t.expired;
+      safeSend(ws, {
+        type: isEnded ? "TIME_UP" : "TIMER_SYNC",
+        payload: {
+          enabled: t.enabled,
+          durationMs: t.durationMs,
+          remainingMs: t.remainingMs,
+          elapsedMs: t.elapsedMs,
+          running: t.running,
+          expired: isEnded,
+          serverNow: new Date().toISOString(),
+          eventStatus: settings.status,
+        },
+        timestamp: Date.now(),
+      });
+    } catch {
+      // Ignored
+    }
+
     ws.on("message", async (raw) => {
       try {
         const msg = JSON.parse(raw.toString());
         if (msg.type === "PING") {
           safeSend(ws, { type: "PONG", timestamp: Date.now() });
+          return;
+        }
+
+        if (msg.type === "SUBSCRIBE_TIMER") {
+          try {
+            await ready();
+            const settings = await getSettings();
+            const t = timerOf(settings);
+            const isEnded = settings.status === "ENDED" || t.expired;
+            safeSend(ws, {
+              type: isEnded ? "TIME_UP" : "TIMER_SYNC",
+              payload: {
+                enabled: t.enabled,
+                durationMs: t.durationMs,
+                remainingMs: t.remainingMs,
+                elapsedMs: t.elapsedMs,
+                running: t.running,
+                expired: isEnded,
+                serverNow: new Date().toISOString(),
+                eventStatus: settings.status,
+              },
+              timestamp: Date.now(),
+            });
+          } catch {}
           return;
         }
 
@@ -206,6 +270,7 @@ export function startWebSocketServer(port: number = Number(process.env.WS_PORT) 
     });
 
     ws.on("close", () => {
+      allClients.delete(ws);
       if (isLeaderboardSub) leaderboardClients.delete(ws);
       if (subscribedTeamId && teamClients.has(subscribedTeamId)) {
         teamClients.get(subscribedTeamId)!.delete(ws);
@@ -216,7 +281,7 @@ export function startWebSocketServer(port: number = Number(process.env.WS_PORT) 
     });
 
     ws.on("error", () => {
-      // Ignored
+      allClients.delete(ws);
     });
   });
 

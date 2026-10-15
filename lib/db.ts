@@ -16,25 +16,46 @@ const cache: Cache = (globalForMongoose.__heistMongoose ??= {
 
 mongoose.set("strictQuery", true);
 
-/** Connect once per process and reuse the connection (safe across hot reloads). */
+/** Connect once per process and reuse the connection (optimized for Vercel high concurrency). */
 export async function connectDb(): Promise<typeof mongoose> {
-  if (cache.conn && mongoose.connection.readyState === 1) return cache.conn;
-  if (!cache.promise) {
-    const env = getEnv();
-    cache.promise = mongoose
-      .connect(env.MONGODB_URI, {
-        dbName: env.MONGODB_DB,
-        serverSelectionTimeoutMS: 15_000,
-        maxPoolSize: 10,
-        autoIndex: true,
-      })
-      .catch((err) => {
-        cache.promise = null;
-        throw new Error(
-          `Could not connect to MongoDB. Check MONGODB_URI and network access (Atlas IP allow-list). Cause: ${err.message}`,
-        );
-      });
+  // If already fully connected, reuse immediately
+  if (mongoose.connection.readyState === 1) {
+    cache.conn = mongoose;
+    return mongoose;
   }
+
+  // If currently in the process of connecting, wait for the pending promise
+  if (mongoose.connection.readyState === 2 && cache.promise) {
+    cache.conn = await cache.promise;
+    return cache.conn;
+  }
+
+  // If connection dropped or uninitialized, start a new connection with robust pool settings
+  cache.promise = null;
+  cache.conn = null;
+
+  const env = getEnv();
+  const isProd = process.env.NODE_ENV === "production";
+
+  cache.promise = mongoose
+    .connect(env.MONGODB_URI, {
+      dbName: env.MONGODB_DB,
+      serverSelectionTimeoutMS: 5_000,
+      connectTimeoutMS: 10_000,
+      socketTimeoutMS: 45_000,
+      maxPoolSize: 50,
+      minPoolSize: 2,
+      maxIdleTimeMS: 60_000,
+      autoIndex: !isProd,
+    })
+    .catch((err) => {
+      cache.promise = null;
+      cache.conn = null;
+      throw new Error(
+        `Could not connect to MongoDB. Check MONGODB_URI and network access (Atlas IP allow-list). Cause: ${err.message}`,
+      );
+    });
+
   cache.conn = await cache.promise;
   return cache.conn;
 }

@@ -1,11 +1,16 @@
 import { broadcastLeaderboard, broadcastTeam } from "./ws-server";
+import { invalidateLeaderboardCache } from "../services/leaderboard";
 
 /**
  * Notify connected WebSocket clients of live game changes (leaderboard or team score changes).
- * Dispatches both in-process and via HTTP fallback.
+ * Dispatches both in-process and via HTTP fallback (non-blocking for Vercel).
  */
 export async function notifyRealtime(options: { leaderboard?: boolean; teamIds?: string[] } = {}) {
   const { leaderboard = true, teamIds = [] } = options;
+
+  if (leaderboard) {
+    invalidateLeaderboardCache();
+  }
 
   // 1. Direct in-process broadcast if ws-server instance is active
   try {
@@ -19,16 +24,17 @@ export async function notifyRealtime(options: { leaderboard?: boolean; teamIds?:
     // Continue to HTTP fallback
   }
 
-  // 2. HTTP broadcast to standalone ws daemon if running on port 3001
-  try {
-    const port = process.env.WS_PORT || "3001";
-    await fetch(`http://127.0.0.1:${port}/broadcast`, {
+  // 2. Non-blocking HTTP broadcast to standalone ws daemon if running or external WS host configured
+  const broadcastUrl =
+    process.env.WS_BROADCAST_URL ||
+    (!process.env.VERCEL ? `http://127.0.0.1:${process.env.WS_PORT || "3001"}/broadcast` : null);
+
+  if (broadcastUrl) {
+    void fetch(broadcastUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ leaderboard, teamIds }),
-      signal: AbortSignal.timeout(1000),
+      signal: AbortSignal.timeout(400),
     }).catch(() => {});
-  } catch {
-    // Non-blocking fire-and-forget
   }
 }

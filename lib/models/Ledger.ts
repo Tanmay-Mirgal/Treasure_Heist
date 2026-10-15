@@ -94,6 +94,7 @@ const PowerUpActivationSchema = new Schema(
   },
   { timestamps: true },
 );
+PowerUpActivationSchema.index({ team: 1, status: 1, grantedAt: -1 });
 
 export type PowerUpActivationDoc = InferSchemaType<typeof PowerUpActivationSchema> & { _id: Types.ObjectId };
 export const PowerUpActivation: Model<PowerUpActivationDoc> =

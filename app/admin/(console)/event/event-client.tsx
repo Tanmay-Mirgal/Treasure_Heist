@@ -122,24 +122,24 @@ export function EventClient() {
                   <span className={`size-1.5 rounded-full ${lowTime ? "bg-red-400 animate-ping" : "bg-emerald-400 animate-ping"}`} />
                 )}
                 <span className={expired ? "text-amber-400" : lowTime ? "text-red-400" : "text-muted-foreground"}>
-                  {expired ? "★ TIME EXPIRED ★" : "Remaining"}
+                  {expired || s.status === "ENDED" ? "★ TIME EXPIRED ★" : "Remaining"}
                 </span>
               </div>
               <div
                 className={`hud-number font-heading text-2xl font-black leading-none ${
-                  expired
+                  expired || s.status === "ENDED"
                     ? "text-amber-300 drop-shadow-[0_0_12px_rgba(245,158,11,0.8)]"
                     : lowTime
                       ? "text-red-300 drop-shadow-[0_0_12px_rgba(239,68,68,0.8)]"
                       : "text-foreground"
                 }`}
               >
-                {expired ? "TIME'S UP" : formatDuration(remaining)}
+                {expired || s.status === "ENDED" ? "TIME'S UP" : formatDuration(remaining)}
               </div>
             </div>
           );
         })() : (
-          <StatTile label="Remaining" value="no timer" tone="gold" />
+          <StatTile label="Remaining" value={s.status === "ENDED" ? "TIME'S UP" : "no timer"} tone={s.status === "ENDED" ? "warn" : "gold"} />
         )}
       </div>
 
@@ -195,7 +195,17 @@ export function EventClient() {
             </div>
             <Button
               disabled={!timerDraft}
-              onClick={() => setToggle({ key: "timer", label: `Timer ${timer.enabled ? "on" : "off"}, ${timer.durationMinutes} minutes`, value: timer.enabled })}
+              onClick={async () => {
+                try {
+                  await patch({ timer });
+                  setTimerDraft(null);
+                  await refresh();
+                  toast.success(`Timer saved: ${timer.enabled ? "Enabled" : "Disabled"} (${timer.durationMinutes} min)`);
+                } catch {
+                  toast.error("Failed to save timer setting.");
+                }
+              }}
+              className="font-bold"
             >
               Save timer
             </Button>
@@ -246,14 +256,10 @@ export function EventClient() {
         onOpenChange={(o) => !o && setToggle(null)}
         title="Change setting"
         description={toggle?.label}
+        requireReason={false}
         onConfirm={async (reason) => {
-          if (toggle!.key === "timer") {
-            await patch({ timer, reason });
-            setTimerDraft(null);
-          } else {
-            const t = toggles.find((x) => x.key === toggle!.key)!;
-            await patch({ ...t.body(toggle!.value), reason });
-          }
+          const t = toggles.find((x) => x.key === toggle!.key)!;
+          await patch({ ...t.body(toggle!.value), reason: reason || null });
           await refresh();
           toast.success("Setting saved");
         }}

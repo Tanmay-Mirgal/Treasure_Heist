@@ -17,6 +17,7 @@ const NotificationSchema = new Schema(
   { timestamps: true },
 );
 NotificationSchema.index({ team: 1, createdAt: -1 });
+NotificationSchema.index({ team: 1, read: 1 });
 
 export type NotificationDoc = InferSchemaType<typeof NotificationSchema> & { _id: Types.ObjectId };
 export const Notification: Model<NotificationDoc> =

@@ -785,13 +785,35 @@ export class GameError extends Error {
 /* Team state (dashboard)                                              */
 /* ------------------------------------------------------------------ */
 
+const sequenceCache = new Map<string, { data: TeamSequenceDoc | null; expiresAt: number }>();
+const qrCache = new Map<string, { data: QRCheckpointDoc | null; expiresAt: number }>();
+
+export async function getCachedSequence(teamId: Types.ObjectId | string): Promise<TeamSequenceDoc | null> {
+  const key = String(teamId);
+  const hit = sequenceCache.get(key);
+  if (hit && Date.now() < hit.expiresAt) return hit.data;
+  const doc = await TeamSequence.findOne({ team: teamId }).lean<TeamSequenceDoc>();
+  sequenceCache.set(key, { data: doc, expiresAt: Date.now() + 30_000 });
+  return doc;
+}
+
+export async function getCachedQR(qrId: Types.ObjectId | string | null | undefined): Promise<QRCheckpointDoc | null> {
+  if (!qrId) return null;
+  const key = String(qrId);
+  const hit = qrCache.get(key);
+  if (hit && Date.now() < hit.expiresAt) return hit.data;
+  const doc = await QRCheckpoint.findById(qrId).lean<QRCheckpointDoc>();
+  qrCache.set(key, { data: doc, expiresAt: Date.now() + 60_000 });
+  return doc;
+}
+
 export async function getTeamState(teamIdStr: string) {
   await ready();
   const teamId = new Types.ObjectId(teamIdStr);
   const now = new Date();
   const [team, seq, settings, powerUps, notifications, unread] = await Promise.all([
     Team.findById(teamId).lean<TeamDoc>(),
-    TeamSequence.findOne({ team: teamId }).lean<TeamSequenceDoc>(),
+    getCachedSequence(teamId),
     getSettings(),
     PowerUpActivation.find({ team: teamId, status: { $ne: "VOID" } }).sort({ grantedAt: -1 }).lean(),
     Notification.find({ team: teamId }).sort({ createdAt: -1 }).limit(10).lean(),
@@ -823,7 +845,7 @@ export async function getTeamState(teamIdStr: string) {
   if (!seq || total === 0) {
     mission = { kind: "UNCONFIGURED", title: "Route not configured", text: "Your team's route has not been configured yet. Contact the Event Desk.", lastAction: null, hint: { used: false, text: null } };
   } else if (team.awaitingAnswer) {
-    const q = await QRCheckpoint.findById(team.awaitingAnswer.qr).lean<QRCheckpointDoc>();
+    const q = await getCachedQR(team.awaitingAnswer.qr);
     mission = {
       kind: "ANSWER",
       title: `Challenge — checkpoint ${team.awaitingAnswer.position}`,
@@ -863,7 +885,7 @@ export async function getTeamState(teamIdStr: string) {
     };
   } else {
     const last = seq.entries.find((e) => e.position === completed);
-    const q = last ? await QRCheckpoint.findById(last.qr).lean<QRCheckpointDoc>() : null;
+    const q = last ? await getCachedQR(last.qr) : null;
     mission = finished
       ? { kind: "FINISHED", title: "Vault opened", text: q?.clueText || "You have completed THE HEIST.", lastAction: "FINISH", hint: { used: false, text: null } }
       : {

@@ -33,8 +33,18 @@ export function formatDurationMs(ms: number | null): string {
   return `${mins}m ${secs.toString().padStart(2, "0")}s`;
 }
 
-/** Live public leaderboard rows computed from MongoDB (aggregate data only). */
+let cachedLeaderboard: { rows: LeaderboardRow[]; expiresAt: number } | null = null;
+
+export function invalidateLeaderboardCache() {
+  cachedLeaderboard = null;
+}
+
+/** Live public leaderboard rows computed from MongoDB (aggregate data only). Buffered with 2s TTL for high concurrency. */
 export async function computeLeaderboard(): Promise<LeaderboardRow[]> {
+  if (cachedLeaderboard && Date.now() < cachedLeaderboard.expiresAt) {
+    return cachedLeaderboard.rows;
+  }
+
   await ready();
   const settings = await getSettings();
   const [teams, seqs] = await Promise.all([
@@ -71,7 +81,7 @@ export async function computeLeaderboard(): Promise<LeaderboardRow[]> {
 
   const ranked = rankTeams(teamsWithDurations, settings.rankingRule);
 
-  return ranked.map((r) => ({
+  const rows: LeaderboardRow[] = ranked.map((r) => ({
     rank: r.rank,
     teamId: r.id,
     name: r.t.displayName,
@@ -79,19 +89,23 @@ export async function computeLeaderboard(): Promise<LeaderboardRow[]> {
     score: r.t.score,
     completed: r.t.currentPosition,
     total: totals.get(r.id) ?? 0,
-    status:
+    status: (
       r.t.status === "DISABLED"
         ? "DISABLED"
         : r.t.finishedAt
           ? "FINISHED"
           : r.t.currentPosition > 0
             ? "IN_PROGRESS"
-            : "NOT_STARTED",
+            : "NOT_STARTED"
+    ) as LeaderboardRow["status"],
     finishedAt: r.t.finishedAt ? new Date(r.t.finishedAt).toISOString() : null,
     lastActivityAt: r.t.lastActivityAt ? new Date(r.t.lastActivityAt).toISOString() : null,
     durationMs: r.durationMs ?? null,
     formattedDuration: r.formattedDuration ?? null,
   }));
+
+  cachedLeaderboard = { rows, expiresAt: Date.now() + 2000 };
+  return rows;
 }
 
 export async function getLeaderboard() {

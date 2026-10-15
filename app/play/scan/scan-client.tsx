@@ -1,16 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useState } from "react";
+import { useState, useCallback } from "react";
+import { AlertCircle, Camera, CheckCircle2, Map, OctagonX, RefreshCw, ScanLine, Sparkles, Timer, Trophy, Zap } from "lucide-react";
 import { toast } from "sonner";
-import { AlertCircle, Camera, CheckCircle2, Map, OctagonX, RefreshCw, ScanLine, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { QrScanner } from "@/components/heist/qr-scanner";
 import type { ScanResultData } from "@/components/heist/scan-result";
 import { useTeamState } from "@/components/heist/team-state";
+import { useRealtimeTimer } from "@/hooks/use-realtime-timer";
 import { api, ApiClientError } from "@/lib/client/api";
 
 export function ScanClient() {
   const { state, refresh } = useTeamState();
+  const timer = useRealtimeTimer(state?.event.timer ? { ...state.event.timer, status: state.event.status } : undefined);
   const [busy, setBusy] = useState(false);
   const [scannedResult, setScannedResult] = useState<ScanResultData | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
@@ -59,9 +62,102 @@ export function ScanClient() {
 
   const targetStation = state?.progress.nextStation ?? state?.progress.currentMission ?? 1;
   const isVerifying = Boolean(state?.mission.isStaged);
+  const isTimeUp = timer.isTimeUp || state?.event.status === "ENDED" || Boolean(state?.event.timer.enabled && state?.event.timer.expired);
+
+  if (isTimeUp) {
+    return (
+      <div className="space-y-4">
+        <div className="relative overflow-hidden rounded-3xl border-3 border-amber-400 bg-gradient-to-b from-amber-500/25 via-slate-900/95 to-slate-950 p-6 sm:p-8 text-center shadow-[0_0_40px_rgba(245,158,11,0.5)]">
+          <div className="absolute inset-x-0 top-0 h-2 subway-hazard animate-pulse" />
+          <div className="mx-auto grid size-16 place-items-center rounded-2xl bg-amber-400/20 border-2 border-amber-400 text-amber-300 shadow-[0_0_20px_rgba(250,204,21,0.6)]">
+            <Timer className="size-8 animate-bounce" />
+          </div>
+          <h1 className="mt-4 font-heading text-3xl sm:text-4xl font-black text-amber-300 tracking-tight">
+            TIMES UP!
+          </h1>
+          <p className="mt-2 text-sm sm:text-base font-bold text-slate-200 max-w-md mx-auto">
+            The event timer has expired and the heist has officially ended.
+            Station checkpoints are closed and no further QR codes can be scanned.
+          </p>
+          <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+            <Button asChild size="lg" className="subway-btn-gold h-14 rounded-2xl px-6 font-heading font-black text-sm uppercase">
+              <Link href="/leaderboard">
+                <Trophy className="size-5 mr-2" /> Okay — View Leaderboard 🏆
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="lg" className="h-14 rounded-2xl px-6 font-heading font-bold text-sm uppercase border-slate-700 hover:bg-slate-800">
+              <Link href="/play">
+                Return to Team Base
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
+      {/* Live Synchronized Race Countdown HUD */}
+      {timer.enabled && (
+        <div
+          className={`relative overflow-hidden rounded-2xl border-2 p-3 sm:p-3.5 shadow-xl backdrop-blur-xl transition-all ${
+            timer.isLowTime
+              ? "border-red-500 bg-gradient-to-r from-red-500/25 via-slate-900/90 to-red-500/15 shadow-[0_0_35px_rgba(239,68,68,0.5)] animate-pulse"
+              : "border-cyan-400/50 bg-gradient-to-r from-cyan-500/15 via-slate-900/90 to-slate-950 shadow-[0_0_25px_rgba(34,211,238,0.25)]"
+          }`}
+        >
+          <div className="absolute inset-x-0 top-0 h-1 subway-hazard opacity-80" />
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div
+                className={`grid size-10 shrink-0 place-items-center rounded-xl border-2 ${
+                  timer.isLowTime
+                    ? "border-red-400 bg-red-500/30 text-red-300 animate-bounce"
+                    : "border-cyan-400/60 bg-cyan-500/20 text-cyan-300"
+                }`}
+              >
+                <Timer className="size-5" />
+              </div>
+              <div className="min-w-0">
+                <div
+                  className={`text-[9px] font-black uppercase tracking-widest ${
+                    timer.isLowTime ? "text-red-400" : "text-cyan-400"
+                  }`}
+                >
+                  {timer.isLowTime ? "⚠ FINAL SPRINT TIME" : "⏱ RACE COUNTDOWN"}
+                </div>
+                <div
+                  className={`hud-number font-heading text-2xl sm:text-3xl font-black leading-none mt-0.5 ${
+                    timer.isLowTime
+                      ? "text-red-300 drop-shadow-[0_0_12px_rgba(239,68,68,0.9)]"
+                      : "text-cyan-200 drop-shadow-[0_0_12px_rgba(34,211,238,0.7)]"
+                  }`}
+                >
+                  {timer.formatted}
+                </div>
+              </div>
+            </div>
+
+            <div className="text-right shrink-0">
+              <div
+                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${
+                  timer.wsConnected
+                    ? "border border-emerald-400/50 bg-emerald-500/20 text-emerald-300 shadow-[0_0_10px_rgba(52,211,153,0.3)]"
+                    : "border border-slate-700 bg-slate-900/80 text-slate-400"
+                }`}
+              >
+                <Zap className={`size-2.5 ${timer.wsConnected ? "text-emerald-400 animate-bounce" : ""}`} />
+                <span>{timer.wsConnected ? "LIVE WS SYNC" : "SERVER SYNC"}</span>
+              </div>
+              <div className="mt-1 text-[10px] font-bold text-slate-400">
+                STATION #{targetStation} TARGET
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Target Station Header */}
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0 flex-1">

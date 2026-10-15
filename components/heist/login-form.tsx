@@ -36,7 +36,7 @@ export function LoginForm({ role }: { role: "team" | "admin" }) {
         body: { username: username.trim(), password },
       });
       const fallback = role === "team" ? "/play" : res.admin?.mustChangePassword ? "/admin/account" : "/admin";
-      router.replace(safeNext(params.get("next"), fallback));
+      router.replace(safeNext(params.get("next"), fallback, role));
       router.refresh();
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : "Login failed. Please try again.");

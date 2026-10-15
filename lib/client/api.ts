@@ -43,11 +43,17 @@ export async function api<T>(url: string, opts: Opts = {}): Promise<T> {
     json?.error?.message ?? "Something went wrong. Please try again.",
     json?.error?.details,
   );
-  if (res.status === 401 && opts.redirectOn401 && typeof window !== "undefined") {
-    const next = encodeURIComponent(window.location.pathname + window.location.search);
-    // Full navigation on purpose: drop all client state when the session is gone.
-    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-    window.location.href = `${opts.redirectOn401 === "admin" ? "/admin/login" : "/login"}?next=${next}`;
+  if (opts.redirectOn401 && typeof window !== "undefined") {
+    if (res.status === 403 && opts.redirectOn401 === "admin") {
+      // Forbidden: A logged-in team called an organizer API endpoint
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+      window.location.href = "/play";
+    } else if (res.status === 401) {
+      const next = encodeURIComponent(window.location.pathname + window.location.search);
+      // Full navigation on purpose: drop all client state when the session is gone.
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+      window.location.href = `${opts.redirectOn401 === "admin" ? "/admin/login" : "/login"}?next=${next}`;
+    }
   }
   throw err;
 }
@@ -57,8 +63,10 @@ export function newIdempotencyKey(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
-/** Only allow same-site relative redirects after login. */
-export function safeNext(next: string | null, fallback: string): string {
+/** Only allow same-site relative redirects after login and enforce strict role boundaries. */
+export function safeNext(next: string | null, fallback: string, role?: "team" | "admin"): string {
   if (!next || !next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\")) return fallback;
+  if (role === "team" && (next === "/admin" || next.startsWith("/admin/"))) return fallback;
+  if (role === "admin" && (next === "/play" || next.startsWith("/play/"))) return fallback;
   return next;
 }

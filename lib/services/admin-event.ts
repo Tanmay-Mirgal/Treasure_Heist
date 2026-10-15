@@ -17,7 +17,7 @@ import { ready } from "./bootstrap";
 import { clearTeamGameData, resetAllTeamScores } from "./admin-teams";
 import { liveValidation } from "./admin-content";
 import { computeLeaderboard } from "./leaderboard";
-import { getSettings, publicEventView, rulesOf, timerOf, type Settings } from "./settings";
+import { getSettings, invalidateSettingsCache, publicEventView, rulesOf, timerOf, type Settings } from "./settings";
 
 /* ------------------------------------------------------------------ */
 /* Settings                                                            */
@@ -89,6 +89,7 @@ export async function updateSettings(actor: AdminActor, patch: SettingsPatch, re
     after[k] = v;
   }
   await EventSettings.updateOne({ key: "event" }, { $set: after });
+  invalidateSettingsCache();
   await audit(actor, { action: "SETTINGS_UPDATE", entityType: "EventSettings", entityId: "event", before, after, reason });
   const { notifyRealtime } = await import("@/lib/server/notify");
   void notifyRealtime({ leaderboard: true });
@@ -199,6 +200,7 @@ export async function eventAction(actor: AdminActor, action: EventAction, reason
   }
 
   await EventSettings.updateOne({ key: "event" }, { $set: set });
+  invalidateSettingsCache();
   await audit(actor, {
     action: `EVENT_${action.toUpperCase().replace(/-/g, "_")}`,
     entityType: "EventSettings",

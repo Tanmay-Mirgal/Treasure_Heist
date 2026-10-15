@@ -5,10 +5,14 @@ import { ShieldCheck } from "lucide-react";
 import { Wordmark } from "@/components/heist/brand";
 import { TrackDivider } from "@/components/heist/bits";
 import { LoginForm } from "@/components/heist/login-form";
+import { redirectIfAuthenticated } from "@/lib/auth/server-guard";
 
 export const metadata: Metadata = { title: "Organizer login" };
 
-export default function AdminLoginPage() {
+export const instant = false;
+
+export default async function AdminLoginPage() {
+  await redirectIfAuthenticated("admin");
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-10">
       <Link href="/" className="mx-auto">

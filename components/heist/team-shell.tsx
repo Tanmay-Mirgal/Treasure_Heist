@@ -6,9 +6,11 @@ import { Suspense, type ReactNode } from "react";
 import { Home, Map, ScanLine, Trophy, Wallet, WifiOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useOnline } from "@/hooks/use-poll";
+import { useRealtimeTimer } from "@/hooks/use-realtime-timer";
 import { HeistMark } from "./brand";
 import { CoinScore, SignalDot } from "./bits";
 import { TeamStateProvider, useTeamState } from "./team-state";
+import { TimesUpModal } from "./times-up-modal";
 
 const NAV = [
   { href: "/play", label: "Lobby", icon: Home },
@@ -73,8 +75,10 @@ function TopBar() {
 
 function EventBanner() {
   const { state } = useTeamState();
+  const timer = useRealtimeTimer(state?.event.timer ? { ...state.event.timer, status: state.event.status } : undefined);
   if (!state) return null;
   const e = state.event;
+  const isTimeUp = timer.isTimeUp || e.status === "ENDED" || e.timer.expired;
   let msg: string | null = null;
   let tone = "bg-cyan-500/15 text-cyan-300 border-b border-cyan-400/20";
   if (!e.participationEnabled) msg = "Participation is paused by the organizers.";
@@ -82,9 +86,9 @@ function EventBanner() {
   else if (e.status === "PAUSED") {
     msg = "The heist is paused. Hold your position.";
     tone = "bg-orange-500/20 text-orange-300 border-b border-orange-400/30";
-  } else if (e.status === "ENDED" || e.timer.expired) {
-    msg = "The heist is over. Check the final leaderboard.";
-    tone = "bg-yellow-500/15 text-yellow-300 border-b border-yellow-400/30";
+  } else if (isTimeUp) {
+    msg = "⏰ TIME'S UP! THE HEIST HAS ENDED · NO MORE SCANS ACCEPTED";
+    tone = "bg-amber-500/25 text-amber-300 border-b-2 border-amber-400/50 shadow-md font-black";
   }
   if (!msg) return null;
   return <div className={cn("px-4 py-1.5 text-center text-xs font-black tracking-wide uppercase", tone)}>{msg}</div>;
@@ -92,6 +96,11 @@ function EventBanner() {
 
 function BottomNav() {
   const path = usePathname();
+  const { state } = useTeamState();
+  const timer = useRealtimeTimer(state?.event.timer ? { ...state.event.timer, status: state.event.status } : undefined);
+  const e = state?.event;
+  const isTimeUp = timer.isTimeUp || e?.status === "ENDED" || Boolean(e?.timer.enabled && e?.timer.expired);
+
   return (
     <nav
       aria-label="Team navigation"
@@ -103,19 +112,22 @@ function BottomNav() {
       <ul className="mx-auto grid h-16 max-w-lg grid-cols-5 items-center px-1 sm:px-3">
         {NAV.map((n) => {
           const active = n.href === "/play" ? path === "/play" : path.startsWith(n.href);
-          if (n.primary)
+          if (n.primary) {
+            const dest = isTimeUp ? "/leaderboard" : n.href;
+            const Icon = isTimeUp ? Trophy : n.icon;
             return (
               <li key={n.href} className="flex justify-center">
                 <Link
-                  href={n.href}
-                  aria-label="Scan Station QR"
+                  href={dest}
+                  aria-label={isTimeUp ? "View Leaderboard" : "Scan Station QR"}
                   aria-current={active ? "page" : undefined}
                   className="-mt-6 sm:-mt-7 group relative grid size-14 sm:size-16 place-items-center rounded-2xl subway-btn-gold shadow-[0_4px_25px_rgba(245,158,11,0.6)] transition-all duration-150"
                 >
-                  <n.icon className="size-7 sm:size-8 stroke-[2.8] text-slate-950 drop-shadow transition-transform group-hover:scale-110 group-active:scale-95" />
+                  <Icon className="size-7 sm:size-8 stroke-[2.8] text-slate-950 drop-shadow transition-transform group-hover:scale-110 group-active:scale-95" />
                 </Link>
               </li>
             );
+          }
           return (
             <li key={n.href} className="relative flex justify-center">
               <Link
@@ -146,6 +158,7 @@ export function TeamShell({ children }: { children: ReactNode }) {
   return (
     <TeamStateProvider>
       <TopBar />
+      <TimesUpModal />
       <main className="mx-auto w-full max-w-lg flex-1 px-4 pb-28 pt-4">{children}</main>
       <Suspense fallback={null}>
         <BottomNav />

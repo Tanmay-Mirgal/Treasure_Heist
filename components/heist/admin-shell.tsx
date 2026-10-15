@@ -67,6 +67,25 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
+function AdminGuard() {
+  const path = usePathname();
+  useEffect(() => {
+    api<{ admin: { mustChangePassword: boolean } | null; team: unknown | null }>("/api/auth/session")
+      .then((s) => {
+        if (s.team && !s.admin) {
+          // A team account must never remain on an admin screen
+          window.location.href = "/play";
+          return;
+        }
+        if (!s.admin) {
+          window.location.href = "/admin/login";
+        }
+      })
+      .catch(() => {});
+  }, [path]);
+  return null;
+}
+
 function PasswordBanner() {
   const [must, setMust] = useState(false);
   const path = usePathname();
@@ -126,6 +145,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
         </header>
         <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 lg:px-8">
           <Suspense fallback={null}>
+            <AdminGuard />
             <PasswordBanner />
           </Suspense>
           {children}
