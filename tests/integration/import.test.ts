@@ -83,12 +83,15 @@ describe("workbook import (synthetic fixture)", () => {
     await call(scan, { cookie: t1, body: { input: await codeAt(1, 1), source: "MANUAL" } });
     await call(scan, { cookie: t1, body: { input: await codeAt(1, 2), source: "MANUAL" } });
     const before = await Team.findOne({ teamNumber: 1 }).lean();
+    const completionsBefore = await CheckpointCompletion.countDocuments({ voided: false });
+    expect(before!.currentPosition).toBeGreaterThan(0); // the team really has progress
     const wb = await parseWorkbook(await buildFixtureWorkbook(), "fixture.xlsx");
     await importWorkbook(wb, { dryRun: false, rules: DEFAULT_RULES });
     const after = await Team.findOne({ teamNumber: 1 }).lean();
-    expect(after!.currentPosition).toBe(2);
+    expect(after!.currentPosition).toBe(before!.currentPosition);
     expect(after!.score).toBe(before!.score);
-    expect(await CheckpointCompletion.countDocuments({ voided: false })).toBe(2);
+    expect(String(after!.stagedCheckpoint ?? null)).toBe(String(before!.stagedCheckpoint ?? null));
+    expect(await CheckpointCompletion.countDocuments({ voided: false })).toBe(completionsBefore);
   });
 
   it("does not change a route that already has progress even if the workbook order changed", async () => {
@@ -179,7 +182,7 @@ describe.skipIf(!hasReal)("the real HEIST.xlsx workbook", () => {
   beforeAll(async () => {
     await useTestDb("realimport");
     await seedFixture(); // creates admin; we then replace routes with the real data
-    await seedTeams(10);
+    await seedTeams(20);
     wb = await parseWorkbook(readFileSync(REAL), "HEIST.xlsx");
     await TeamSequence.deleteMany({});
     await QRCheckpoint.deleteMany({});
@@ -187,18 +190,18 @@ describe.skipIf(!hasReal)("the real HEIST.xlsx workbook", () => {
   });
   afterAll(dropTestDb);
 
-  it("finds 10 teams, 10 starting clues, 110 sequence entries and 110 team-specific QR copies", async () => {
+  it("finds 20 teams, 20 starting clues, 220 sequence entries and 220 team-specific QR copies", async () => {
     const dry = await importWorkbook(wb, { dryRun: true, rules: DEFAULT_RULES });
     expect(dry.summary).toMatchObject({
-      teamsFound: 10,
-      startingCluesFound: 10,
-      sequenceEntriesFound: 110,
-      qrCopiesFound: 110,
-      baseQrIdsFound: 30,
-      sharedFinish: "QR15",
+      teamsFound: 20,
+      startingCluesFound: 20,
+      sequenceEntriesFound: 220,
+      qrCopiesFound: 220,
+      baseQrIdsFound: 60,
+      sharedFinish: null, // Teams 1-10 finish at QR15, Teams 11-20 at QR30
     });
-    expect(await TeamSequence.countDocuments()).toBe(10);
-    expect(await QRCheckpoint.countDocuments()).toBe(110);
+    expect(await TeamSequence.countDocuments()).toBe(20);
+    expect(await QRCheckpoint.countDocuments()).toBe(220);
   });
 
   it("preserves each team's intended QR order from the sequence sheet", async () => {
@@ -206,7 +209,7 @@ describe.skipIf(!hasReal)("the real HEIST.xlsx workbook", () => {
       const s = await TeamSequence.findOne({ teamNumber: row.teamNumber }).lean();
       expect(s!.entries.map((e) => e.qrId), `Team ${row.teamNumber}`).toEqual(row.qrIds);
       expect(s!.entries).toHaveLength(11);
-      expect(s!.entries.at(-1)!.copyId).toBe(`QR15-T${row.teamNumber}`);
+      expect(s!.entries.at(-1)!.copyId).toBe(`${row.qrIds.at(-1)}-T${row.teamNumber}`);
     }
   });
 
@@ -221,6 +224,27 @@ describe.skipIf(!hasReal)("the real HEIST.xlsx workbook", () => {
       firsts.add(s!.entries[0]!.qrId);
     }
     expect(firsts.size).toBeGreaterThan(1); // teams do not all begin in the same place
+  });
+
+  it("imports Teams 11-20 (header on row 2) with their plain-text locations and generates QR tokens for every copy", async () => {
+    for (let n = 11; n <= 20; n++) {
+      const s = await TeamSequence.findOne({ teamNumber: n }).lean();
+      expect(s, `Team ${n}`).toBeTruthy();
+      expect(s!.entries).toHaveLength(11);
+      expect(s!.entries.at(-1)!.copyId).toBe(`QR30-T${n}`);
+      expect(s!.startingClue!.riddle.length).toBeGreaterThan(10);
+      const first = await QRCheckpoint.findOne({ copyId: s!.entries[0]!.copyId }).lean();
+      expect(first!.placement!.label).toBe(s!.startingClue!.location);
+    }
+    const t11 = await QRCheckpoint.findOne({ copyId: "QR31-T11" }).lean();
+    expect(t11!.placement!.label).toBe("Workshop (Room 100/101)");
+    expect(t11!.destination!.label).toBe("Canteen water dispenser");
+    const finish = await QRCheckpoint.findOne({ copyId: "QR30-T11" }).lean();
+    expect(finish).toMatchObject({ actionType: "FINISH", placement: { label: "Ground-floor Event Desk" } });
+    const raw = await QRCheckpoint.collection.find({ teamNumber: { $gte: 11 } }).toArray();
+    expect(raw).toHaveLength(110);
+    expect(new Set(raw.map((q) => q.token)).size).toBe(110);
+    expect(raw.every((q) => /^[A-Za-z0-9_-]{32}$/.test(q.token) && q.manualCode?.length === 8)).toBe(true);
   });
 
   it("preserves original clue text exactly and keeps the verbatim copy", async () => {
@@ -246,7 +270,7 @@ describe.skipIf(!hasReal)("the real HEIST.xlsx workbook", () => {
 
   it("reimporting the real workbook is idempotent", async () => {
     const r = await importWorkbook(wb, { dryRun: false, rules: DEFAULT_RULES });
-    expect(r.applied).toMatchObject({ qrCreated: 0, qrUpdated: 0, qrUnchanged: 110, sequencesCreated: 0, sequencesUnchanged: 10 });
-    expect(await QRCheckpoint.countDocuments()).toBe(110);
+    expect(r.applied).toMatchObject({ qrCreated: 0, qrUpdated: 0, qrUnchanged: 220, sequencesCreated: 0, sequencesUnchanged: 20 });
+    expect(await QRCheckpoint.countDocuments()).toBe(220);
   });
 });

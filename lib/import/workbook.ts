@@ -137,6 +137,15 @@ function lastUsedColumn(ws: ExcelJS.Worksheet): number {
   return max;
 }
 
+/** First row (within the top 10) whose cells contain every wanted header label; falls back to row 1. */
+function findHeaderRow(ws: ExcelJS.Worksheet, maxCol: number, ...wanted: string[]): number {
+  for (let r = 1; r <= Math.min(10, ws.rowCount); r++) {
+    const cells = rowValues(ws, r, maxCol).map((v) => v.trim().toLowerCase());
+    if (wanted.every((w) => cells.includes(w))) return r;
+  }
+  return 1;
+}
+
 function findSheet(wb: ExcelJS.Workbook, name: string): ExcelJS.Worksheet | undefined {
   return wb.worksheets.find((w) => w.name.trim().toLowerCase() === name.toLowerCase());
 }
@@ -155,10 +164,16 @@ export async function parseWorkbook(buffer: Buffer | ArrayBuffer, fileName = "HE
   if (!seqWs) missingSheets.push("sequence sheet");
   else {
     const maxCol = lastUsedColumn(seqWs);
-    const headers = rowValues(seqWs, 1, maxCol);
-    for (let r = 2; r <= seqWs.rowCount; r++) {
+    const headerRow = findHeaderRow(seqWs, maxCol, "team", "scan 1");
+    let headers = rowValues(seqWs, headerRow, maxCol);
+    for (let r = headerRow + 1; r <= seqWs.rowCount; r++) {
       const vals = rowValues(seqWs, r, maxCol);
       if (vals.every((v) => !v.trim())) continue;
+      // A repeated header row (a second table further down the sheet) re-defines the columns.
+      if ((vals[0] ?? "").trim().toLowerCase() === "team" && vals.some((v) => /^scan 1$/i.test(v.trim()))) {
+        headers = vals;
+        continue;
+      }
       const teamNumber = parseTeamNumber(vals[0] ?? "");
       if (teamNumber === null) {
         vals.forEach((v, i) => v.trim() && sequenceNotes.push({ cell: `${colLetter(i + 1)}${r}`, value: v }));
@@ -182,13 +197,14 @@ export async function parseWorkbook(buffer: Buffer | ArrayBuffer, fileName = "HE
   if (!startWs) missingSheets.push("Starting clues");
   else {
     const maxCol = Math.max(5, lastUsedColumn(startWs));
-    const headers = rowValues(startWs, 1, maxCol);
+    const headerRow = findHeaderRow(startWs, maxCol, "team name", "riddle");
+    const headers = rowValues(startWs, headerRow, maxCol);
     const iTeam = headerIndex(headers, "team name", "team");
     const iQr = headerIndex(headers, "qr code", "qr");
     const iLoc = headerIndex(headers, "location");
     const iRiddle = headerIndex(headers, "riddle", "clue");
     const iAns = headerIndex(headers, "answer");
-    for (let r = 2; r <= startWs.rowCount; r++) {
+    for (let r = headerRow + 1; r <= startWs.rowCount; r++) {
       const vals = rowValues(startWs, r, maxCol);
       if (vals.every((v) => !v.trim())) continue;
       const teamLabel = (vals[iTeam] ?? "").trim();
@@ -220,7 +236,8 @@ export async function parseWorkbook(buffer: Buffer | ArrayBuffer, fileName = "HE
       continue;
     }
     const maxCol = lastUsedColumn(ws);
-    const headers = rowValues(ws, 1, maxCol);
+    const headerRow = findHeaderRow(ws, maxCol, "scan", "qr copy");
+    const headers = rowValues(ws, headerRow, maxCol);
     const iTeam = headerIndex(headers, "team");
     const iScan = headerIndex(headers, "scan");
     const iCopy = headerIndex(headers, "qr copy", "qr");
@@ -230,7 +247,7 @@ export async function parseWorkbook(buffer: Buffer | ArrayBuffer, fileName = "HE
     const iNext = headerIndex(headers, "next qr");
     const known = new Set([iTeam, iScan, iCopy, iPlace, iClue, iDest, iNext]);
     const rows: ParsedRow[] = [];
-    for (let r = 2; r <= ws.rowCount; r++) {
+    for (let r = headerRow + 1; r <= ws.rowCount; r++) {
       const vals = rowValues(ws, r, maxCol);
       if (vals.every((v) => !v.trim())) continue;
       const copyId = (vals[iCopy] ?? "").trim().toUpperCase();

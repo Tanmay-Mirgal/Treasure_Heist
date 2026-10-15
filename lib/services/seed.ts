@@ -6,7 +6,7 @@ import { getSettings, rulesOf } from "./settings";
 /** Documented development default; an admin seeded with it must change it. */
 export const DEFAULT_ADMIN_PASSWORD = "Tanmay123";
 
-export const SEED_TEAM_COUNT = 10;
+export const SEED_TEAM_COUNT = 20;
 
 /**
  * Idempotent: creates the administrator only if missing. Never resets an
